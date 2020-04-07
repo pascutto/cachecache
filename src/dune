@@ -1,0 +1,4 @@
+(library
+ (name gospel_lru)
+ (public_name gospel-lru)
+ (libraries logs))
