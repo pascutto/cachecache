@@ -1,1 +1,38 @@
+opam-version: "2.0"
 
+maintainer: ["Clément Pascutto <clement@tarides.com>"]
+authors: ["Clément Pascutto <clement@tarides.com>"]
+synopsis: "A verified implementation of simple LRU caches"
+description: """
+A verified implementation of simple LRU caches
+"""
+
+homepage: "https://github.com/pascutto/gospel-lru"
+dev-repo: "git+https://github.com/pascutto/gospel-lru.git"
+doc: "https://pascutto.github.io/gospel-lru/"
+bug-reports: "https://github.com/pascutto/gospel-lru/issues"
+license: "MIT"
+
+depends: [
+  "dune" {>= "2.0"}
+  "alcotest"
+]
+
+build: [
+  ["dune" "subst"] {pinned}
+  [
+    "dune"
+    "build"
+    "-p"
+    name
+    "-j"
+    jobs
+    "@install"
+    "@runtest" {with-test}
+    "@doc" {with-doc}
+  ]
+]
+
+pin-depends: [
+  [ "why3.dev" "git+https://gitlab.inria.fr/why3/why3.git#f40af3b05ee9b553e90be5a7b04d7fdf4d26f780" ]
+]

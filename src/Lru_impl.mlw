@@ -1,0 +1,56 @@
+module Impl
+
+  use list.List
+  use list.Length
+  use int.Int
+  use mach.int.Int63
+  use option.Option
+
+  scope Make
+  
+    scope K
+      type t
+      val equal (_: t) (_: t) : bool
+      val hash (_: t) : int63
+    end
+    scope V
+      type t
+      val weight (_: t) : int63
+    end
+  
+    type t = unit
+    
+    type key = K.t
+    
+    type value = V.t
+
+    let v capacity = ()
+    
+    let is_empty t = true
+    
+    let size t : int63 = 0
+    
+    let mem k t = false
+    
+    let find k t = None
+    
+    let add k v t = () 
+  end
+
+end
+
+module Correct
+
+  use Impl as L
+
+  clone Lru.Sig with
+    type Make.K.t = L.Make.K.t,
+    val Make.K.equal = L.Make.K.equal,
+    val Make.K.hash = L.Make.K.hash,
+  
+    type Make.V.t = L.Make.V.t,
+    val Make.V.weight = L.Make.V.weight,
+  
+    type Make.t = L.Make.t,
+    val Make.v = L.Make.v
+end

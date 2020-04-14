@@ -1,4 +1,15 @@
 (library
- (name gospel_lru)
- (public_name gospel-lru)
- (libraries logs))
+ (name lru)
+ (public_name gospel-lru))
+
+(rule
+ (target Lru_impl__Impl.ml)
+ (deps Lru.mli Lru_impl.mlw)
+ (action
+  (run why3 extract -D ocaml64 -L . --modular -o . Lru_impl.mlw)))
+
+(rule
+ (target Lru.ml)
+ (deps Lru_impl__Impl.ml)
+ (action
+  (copy %{deps} %{target})))

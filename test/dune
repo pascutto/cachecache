@@ -1,3 +1,0 @@
-(test
- (name main)
- (libraries alcotest gospel-lru logs logs.fmt))
