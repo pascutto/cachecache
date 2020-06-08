@@ -13,3 +13,8 @@
  (deps Lru_impl__Impl.ml)
  (action
   (copy %{deps} %{target})))
+
+(rule
+ (alias  runtest)
+ (action
+  (run why3 replay .)))

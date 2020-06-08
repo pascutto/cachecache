@@ -1,35 +1,62 @@
 (** Verified LRU caches *)
 
 module Make (K : sig
-  type t
+  type key
 
-  val equal : t -> t -> bool
+  (*@ predicate equiv (x: key) (y: key) *)
+  (*@ axiom refl : forall x: key. equiv x x *)
+  (*@ axiom sym  : forall x y: key. equiv x y -> equiv y x *)
+  (*@ axiom trans: forall x y z: key. equiv x y -> equiv y z -> equiv x z *)
 
-  val hash : t -> int
-end) (V : sig
-  type t
+  val equal : key -> key -> bool
+  (*@ b = equal x y
+      ensures b <-> equiv x y *)
+  (*@ function hash_f (x: key) : integer *)
+  (*@ axiom compatibility: forall x y: key. equiv x y -> hash_f x = hash_f y *)
 
-  val weight : t -> int
+  val hash : key -> int
+  (*@ h = hash x
+      ensures h = hash_f x *)
 end) : sig
+  type 'a lru
   (** The type for LRU caches. *)
-  type t
+  (*@ ephemeral
+      model cap : int
+      mutable model assoc : K.key -> 'a option
+      mutable model age : K.key -> int
+      invariant cap > 0
+      invariant forall k k'. not (K.equiv k k') <-> age k <> age k'
+      invariant forall k. age k >= cap <-> assoc k = None *)
 
-  (** The type for keys. *)
-  type key = K.t
-
-  (** The type for values. *)
-  type value = V.t
-
-  val v : int -> t
+  val v : int -> 'a lru
   (** [v capacity] creates an empty cache with capacity [capacity]. *)
+  (*@ t = v c
+      checks c > 0
+      ensures cap t = c
+      ensures forall k. assoc t k = None *)
 
-  val is_empty : t -> bool
+  val is_empty : 'a lru -> bool
+  (*@ b = is_empty t
+      ensures b = true <-> forall k. assoc t k = None *)
 
-  val size : t -> int
+  val capacity : 'a lru -> int
+  (*@ c = capacity t
+      ensures c = cap t *)
 
-  val mem : key -> t -> bool
+  val mem : K.key -> 'a lru -> bool
+  (*@ b = mem k t
+      ensures b = true <-> assoc t k <> None *)
 
-  val find : key -> t -> value option
+  val find_opt : K.key -> 'a lru -> 'a option
+  (*@ o = find_opt k t
+      ensures o = assoc t k *)
 
-  val add : key -> value -> t -> unit
+  val add : K.key -> 'a -> 'a lru -> unit
+  (*@ add k v t
+      modifies t
+      ensures assoc t k = Some v
+      ensures forall k', v'.
+        not (K.equiv k k') -> assoc t k' = Some v' -> assoc (old t) k' = Some v'
+      ensures forall k'.
+        age t k' = if K.equiv k k' then 0 else age (old t) k' + 1 *)
 end
