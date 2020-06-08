@@ -1,10 +1,12 @@
 module Impl
 
-  use list.List
-  use list.Length
+  use hashtbl.Hashtbl
+  use pqueue.Pqueue
   use int.Int
   use mach.int.Int63
   use option.Option
+
+  exception Invalid_argument string
 
   scope Make
   
@@ -13,26 +15,58 @@ module Impl
       val equal (_: t) (_: t) : bool
       val hash (_: t) : int63
     end
-    scope V
-      type t
-      val weight (_: t) : int63
-    end
   
-    type t = unit
-    
-    type key = K.t
-    
-    type value = V.t
+    type t 'a = {
+      tbl: Hashtbl.t K.t;
+      lst: Pqueue.t;
+      cap : int63;
+      mutable ghost assoc: K.t -> option 'a;
+      mutable ghost age: K.t -> int63
+    }
+    invariant { cap > 0 }
+    invariant { forall k. age k >= cap <-> assoc k = None }
+    by { 
+      tbl = Hashtbl.create 0;
+      lst = Pqueue.create ();
+      cap = 1;
+      assoc = (fun k -> None); 
+      age = (fun _ -> 1);
+    }
 
-    let v capacity = ()
-    
-    let is_empty t = true
-    
-    let size t : int63 = 0
+    let unsafe_v (c: int63)
+      requires { c > 0 }
+      ensures { forall k. result.assoc k = None }
+      ensures { result.cap = c }
+    =
+      { 
+        tbl = Hashtbl.create 0;
+        lst = Pqueue.create ();
+        cap = c; 
+        assoc = (fun k -> None); 
+        age = (fun _ -> c)
+      }
+      
+    let v (c: int63) 
+      raises { Invalid_argument _ -> c <= 0 }
+      ensures { forall k. result.assoc k = None }
+      ensures { result.cap = c }
+    =
+      if c <= 0 then raise Invalid_argument "capacity must be strictly positive"
+      else unsafe_v c
+
+    let is_empty (t: t 'a)
+      ensures { result = true <-> forall k. t.assoc k = None }
+    =
+      length t.lst = 0
+
+    let capacity t 
+      ensures { result = t.cap }  
+    = 
+      t.cap
     
     let mem k t = false
     
-    let find k t = None
+    let find_opt k t = None
     
     let add k v t = () 
   end
@@ -44,13 +78,15 @@ module Correct
   use Impl as L
 
   clone Lru.Sig with
-    type Make.K.t = L.Make.K.t,
-    val Make.K.equal = L.Make.K.equal,
-    val Make.K.hash = L.Make.K.hash,
-  
-    type Make.V.t = L.Make.V.t,
-    val Make.V.weight = L.Make.V.weight,
-  
-    type Make.t = L.Make.t,
-    val Make.v = L.Make.v
+     type Make.K.t = L.Make.K.t,
+     val Make.K.equal = L.Make.K.equal,
+     val Make.K.hash = L.Make.K.hash,
+     
+     type Make.t = L.Make.t,
+     val Make.v = L.Make.v,
+     val Make.is_empty = L.Make.is_empty,
+     val Make.capacity = L.Make.capacity,
+     val Make.mem = L.Make.mem,
+     val Make.find_opt = L.Make.find_opt,
+     val Make.add = L.Make.add
 end

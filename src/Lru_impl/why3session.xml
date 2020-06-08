@@ -2,7 +2,56 @@
 <!DOCTYPE why3session PUBLIC "-//Why3//proof session v5//EN"
 "http://why3.lri.fr/why3session.dtd">
 <why3session shape_version="6">
-<file format="whyml" proved="true">
+<prover id="2" name="CVC4" version="1.6" timelimit="5" steplimit="0" memlimit="1000"/>
+<file format="whyml">
 <path name=".."/><path name="Lru_impl.mlw"/>
+<theory name="Impl">
+ <goal name="Make.lru&#39;vc" expl="VC for lru">
+ <proof prover="2" obsolete="true"><result status="valid" time="0.03" steps="7117"/></proof>
+ </goal>
+ <goal name="Make.unsafe_v&#39;vc" expl="VC for unsafe_v">
+ <proof prover="2" obsolete="true"><result status="valid" time="0.03" steps="9205"/></proof>
+ </goal>
+ <goal name="Make.v&#39;vc" expl="VC for v">
+ <proof prover="2" obsolete="true"><result status="valid" time="0.02" steps="6674"/></proof>
+ </goal>
+ <goal name="Make.is_empty&#39;vc" expl="VC for is_empty">
+ <proof prover="2" obsolete="true"><result status="timeout" time="5.00" steps="3269070"/></proof>
+ </goal>
+ <goal name="Make.capacity&#39;vc" expl="VC for capacity">
+ <proof prover="2" obsolete="true"><result status="valid" time="0.02" steps="5231"/></proof>
+ </goal>
+</theory>
+<theory name="Correct">
+ <goal name="Sig.Make.K.refl">
+ </goal>
+ <goal name="Sig.Make.K.sym">
+ </goal>
+ <goal name="Sig.Make.K.trans">
+ </goal>
+ <goal name="Sig.Make.K.equal&#39;vc" expl="VC for equal">
+ </goal>
+ <goal name="Sig.Make.K.compatibility">
+ </goal>
+ <goal name="Sig.Make.K.hash&#39;vc" expl="VC for hash">
+ </goal>
+ <goal name="Sig.Make.lru&#39;vc" expl="VC for lru">
+ </goal>
+ <goal name="Sig.Make.v&#39;vc" expl="VC for v">
+ <proof prover="2" obsolete="true"><result status="valid" time="0.10" steps="33785"/></proof>
+ </goal>
+ <goal name="Sig.Make.is_empty&#39;vc" expl="VC for is_empty">
+ <proof prover="2" obsolete="true"><result status="valid" time="0.06" steps="28920"/></proof>
+ </goal>
+ <goal name="Sig.Make.capacity&#39;vc" expl="VC for capacity">
+ <proof prover="2" obsolete="true"><result status="valid" time="0.06" steps="28920"/></proof>
+ </goal>
+ <goal name="Sig.Make.mem&#39;vc" expl="VC for mem">
+ </goal>
+ <goal name="Sig.Make.find_opt&#39;vc" expl="VC for find_opt">
+ </goal>
+ <goal name="Sig.Make.add&#39;vc" expl="VC for add">
+ </goal>
+</theory>
 </file>
 </why3session>
