@@ -25,7 +25,11 @@ end) : sig
       mutable model assoc : K.t -> 'a option
       mutable model age : K.t -> int
       invariant cap > 0
-      invariant forall k k'. not (K.equiv k k') <-> age k <> age k'
+      invariant forall k k'.
+        not (K.equiv k k') ->
+        assoc k <> None -> assoc k' <> None ->
+        age k <> age k'
+      invariant forall k. age k >= 0
       invariant forall k. age k >= cap <-> assoc k = None *)
 
   val v : int -> 'a t
@@ -33,6 +37,10 @@ end) : sig
   (*@ t = v c
       checks c > 0
       ensures cap t = c
+      ensures forall k. assoc t k = None *)
+
+  val clear : 'a t -> unit
+  (*@ clear t
       ensures forall k. assoc t k = None *)
 
   val is_empty : 'a t -> bool
@@ -47,6 +55,11 @@ end) : sig
   (*@ b = mem k t
       ensures b = true <-> assoc t k <> None *)
 
+  val find : K.t -> 'a t -> 'a
+  (*@ v = find k t
+      ensures assoc t k = Some v
+      raises Not_found -> assoc t k = None *)
+
   val find_opt : K.t -> 'a t -> 'a option
   (*@ o = find_opt k t
       ensures o = assoc t k *)
@@ -58,5 +71,8 @@ end) : sig
       ensures forall k', v'.
         not (K.equiv k k') -> assoc t k' = Some v' -> assoc (old t) k' = Some v'
       ensures forall k'.
-        age t k' = if K.equiv k k' then 0 else age (old t) k' + 1 *)
+        age t k' =
+          if K.equiv k k' then 0
+          else if age (old t) k' < age (old t) k then age (old t) k' + 1
+          else age (old t) k' *)
 end
