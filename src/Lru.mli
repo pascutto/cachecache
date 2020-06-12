@@ -1,29 +1,31 @@
 (** Verified LRU caches *)
 
 module Make (K : sig
-  type t
+  type key
 
-  (*@ predicate equiv (x: t) (y: t) *)
-  (*@ axiom refl : forall x: t. equiv x x *)
-  (*@ axiom sym  : forall x y: t. equiv x y -> equiv y x *)
-  (*@ axiom trans: forall x y z: t. equiv x y -> equiv y z -> equiv x z *)
+  (*@ predicate equiv (x: key) (y: key) *)
+  (*@ axiom refl : forall x: key. equiv x x *)
+  (*@ axiom sym  : forall x y: key. equiv x y -> equiv y x *)
+  (*@ axiom trans: forall x y z:key. equiv x y -> equiv y z -> equiv x z *)
 
-  val equal : t -> t -> bool
+  val equal : key -> key -> bool
   (*@ b = equal x y
       ensures b <-> equiv x y *)
-  (*@ function hash_f (x: t) : integer *)
-  (*@ axiom compatibility: forall x y: t. equiv x y -> hash_f x = hash_f y *)
+  (*@ function hash_f (x: key) : integer *)
+  (*@ axiom compatibility: forall x y: key. equiv x y -> hash_f x = hash_f y *)
 
-  val hash : t -> int
+  val hash : key -> int
   (*@ h = hash x
       ensures h = hash_f x *)
+
+  val witness : unit -> key
 end) : sig
   type 'a t
   (** The type for LRU caches. *)
   (*@ ephemeral
       model cap : int
-      mutable model assoc : K.t -> 'a option
-      mutable model age : K.t -> int
+      mutable model assoc : K.key -> 'a option
+      mutable model age : K.key -> int
       invariant cap > 0
       invariant forall k k'.
         not (K.equiv k k') ->
@@ -51,20 +53,20 @@ end) : sig
   (*@ c = capacity t
       ensures c = cap t *)
 
-  val mem : K.t -> 'a t -> bool
+  val mem : K.key -> 'a t -> bool
   (*@ b = mem k t
       ensures b = true <-> assoc t k <> None *)
 
-  val find : K.t -> 'a t -> 'a
+  val find : K.key -> 'a t -> 'a
   (*@ v = find k t
       ensures assoc t k = Some v
       raises Not_found -> assoc t k = None *)
 
-  val find_opt : K.t -> 'a t -> 'a option
+  val find_opt : K.key -> 'a t -> 'a option
   (*@ o = find_opt k t
       ensures o = assoc t k *)
 
-  val add : K.t -> 'a -> 'a t -> unit
+  val add : K.key -> 'a -> 'a t -> unit
   (*@ add k v t
       modifies t
       ensures assoc t k = Some v
