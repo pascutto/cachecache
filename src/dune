@@ -1,9 +1,11 @@
 (library
  (name lru)
- (public_name gospel-lru))
+ (flags (:standard -w -27-32)) ; for generated files
+ (public_name gospel-lru)
+ (libraries zarith))
 
 (rule
- (target Lru_impl__Impl.ml)
+ (targets Lru_impl__DLList.ml Lru_impl__Impl.ml)
  (deps Lru.mli Lru_impl.mlw)
  (action
   (run why3 extract -D ocaml64 -L . --modular -o . Lru_impl.mlw)))

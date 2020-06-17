@@ -11,14 +11,28 @@ module Make (K : sig
   val equal : key -> key -> bool
   (*@ b = equal x y
       ensures b <-> equiv x y *)
-  (*@ function hash_f (x: key) : integer *)
-  (*@ axiom compatibility: forall x y: key. equiv x y -> hash_f x = hash_f y *)
-
-  val hash : key -> int
-  (*@ h = hash x
-      ensures h = hash_f x *)
 
   val witness : unit -> key
+end) (H : sig
+  type 'v t 
+ 
+  val create : unit -> 'v t
+
+  val mem : K.key -> 'v t -> bool
+
+  val is_empty : 'v t -> bool
+
+  val add : K.key -> 'v -> 'v t -> unit
+
+  val find : K.key -> 'v t -> 'v
+
+  val find_exn : K.key -> 'v t -> 'v
+
+  val remove : K.key -> 'v t -> unit
+
+  val size : 'v t -> Z.t
+
+  val clear : 'v t -> unit t
 end) : sig
   type 'a t
   (** The type for LRU caches. *)

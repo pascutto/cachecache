@@ -1,5 +1,6 @@
 module DLList
   use int.Int
+  use mach.int.Int63
   use option.Option
   use array.Array
 
@@ -47,9 +48,7 @@ module DLList
     last = 0;
     cap = 1;
     size = 1;
-    occupied = Array.make 1 true; 
-    (* What if I wanted false here ? 
-       Can't seem to unify the two `any 'a`*)
+    occupied = Array.make 1 true;
   }
   
   let create witness c
@@ -112,15 +111,14 @@ module DLList
       assert { t.first <> t.last };
       assert {t.prev[t.last] <> -1};
       let removed = Some t.contents[t.last] in
-      t.contents[t.last] <- v;
-      t.next[t.last] <- t.first;
-      t.prev[t.first] <- t.last;
-      t.next[t.prev[t.last]] <- -1;
-      t.first <- t.last;
-      t.prev[t.first] <- -1;
-      assert {t.prev[t.last] <> -1};
-      t.last <- t.prev[t.last];
-      assert {t.last <> -1};
+      let old_last = t.last in
+      t.last <- t.prev[old_last];
+      t.contents[old_last] <- v;
+      t.next[t.prev[old_last]] <- -1;
+      t.prev[old_last] <- -1;
+      t.next[old_last] <- t.first;
+      t.prev[t.first] <- old_last;
+      t.first <- old_last;
       removed
     )
   in
@@ -130,6 +128,7 @@ module DLList
   =
   t.next[t.prev[i]] <- t.next[i];
   t.prev[t.next[i]] <- t.prev[i];
+  t.prev[t.first] <- i;
   t.next[i] <- t.first;
   t.prev[i] <- -1;
   t.first <- i;
@@ -139,7 +138,7 @@ module DLList
   = t.contents[i]
   
   let length t
-  = t.size
+  = Int63.of_int t.size
 end
 
 module Impl
@@ -157,14 +156,13 @@ module Impl
     scope K
       type key
       val equal (_: key) (_: key) : bool
-      val hash (_: key) : int63
       val witness () : key
     end
 
-    clone fmap.MapImp as MapImp with type key = K.key
+    clone fmap.MapImp as H with type key = K.key, val eq = K.equal
   
     type t 'a = {
-      tbl: MapImp.t (int, 'a);
+      tbl: H.t (int, 'a);
       lst: DLList.t K.key;
       cap : int63;
       mutable ghost assoc: K.key -> option 'a;
@@ -180,7 +178,7 @@ module Impl
     =
     let witness = K.witness () in
     { 
-      tbl = MapImp.create ();
+      tbl = H.create ();
       lst = DLList.create witness (Int63.to_int c);
       cap = c; 
       assoc = (fun k -> None); 
@@ -199,7 +197,7 @@ module Impl
     let clear (t: t 'a) 
       ensures { forall k. t.assoc k = None }
     =
-    MapImp.clear t.tbl;
+    H.clear t.tbl;
     DLList.clear t.lst
 
     let is_empty (t: t 'a)
@@ -213,13 +211,13 @@ module Impl
     let mem (k: K.key) (t: t 'a) : bool 
       ensures { result = true <-> t.assoc k <> None }
     =
-    MapImp.mem k t.tbl
+    H.mem k t.tbl
     
     let find (k: K.key) (t: t 'a) : 'a
       ensures { Some result = t.assoc k }
       raises { Not_found -> t.assoc k = None }
     = 
-    let _index, value = MapImp.find_exn k t.tbl in
+    let _index, value = H.find_exn k t.tbl in
     value
     
     let find_opt (k: K.key) (t: t 'a) : option 'a 
@@ -230,19 +228,20 @@ module Impl
     let add (k: K.key) (v: 'a) (t: t 'a) : unit 
     =
     try
-      let index, _value = MapImp.find_exn k t.tbl in
+      let index, _value = H.find_exn k t.tbl in
       let new_index = DLList.promote t.lst index in
-      MapImp.add k (new_index, v) t.tbl
+      H.add k (new_index, v) t.tbl
     with Not_found ->
       let index, removed = DLList.append t.lst k in
       match removed with
       | None -> ()
-      | Some key -> MapImp.remove key  t.tbl
-      end
+      | Some key -> H.remove key t.tbl
+      end;
+      H.add k (index, v) t.tbl
     end
   end
 end
-
+(*
 module Correct
 
   use Impl as L
@@ -250,9 +249,18 @@ module Correct
   clone Lru.Sig with
      type Make.K.key = L.Make.K.key,
      val Make.K.equal = L.Make.K.equal,
-     val Make.K.hash = L.Make.K.hash,
      val Make.K.witness = L.Make.K.witness,
-     
+
+     type Make.H.t = L.Make.H.t,
+     val Make.H.create = L.Make.H.create,
+     val Make.H.mem = L.Make.H.mem,
+     val Make.H.is_empty = L.Make.H.is_empty,
+     val Make.H.add = L.Make.H.add,
+     val Make.H.find = L.Make.H.find,
+     val Make.H.find_exn = L.Make.H.find_exn,
+     val Make.H.remove = L.Make.H.remove,
+     val Make.H.clear = L.Make.H.clear,
+ 
      type Make.t = L.Make.t,
      val Make.v = L.Make.v,
      val Make.clear = L.Make.clear,
@@ -263,3 +271,4 @@ module Correct
      val Make.find_opt = L.Make.find_opt,
      val Make.add = L.Make.add
 end
+*)
