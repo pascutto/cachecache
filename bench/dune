@@ -1,0 +1,9 @@
+(executable
+ (name main)
+ (libraries bechamel bechamel.js bechamel.notty notty.unix lru gospel_lru
+   zarith))
+
+(alias
+ (name runtest)
+ (package gospel-lru-bench)
+ (deps main.exe))

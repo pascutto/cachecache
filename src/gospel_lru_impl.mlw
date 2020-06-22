@@ -148,6 +148,8 @@ module Impl
   use mach.int.Int63
   use option.Option
   use ocaml.Exceptions
+  use map.Map
+  use export fmap.Fmap
 
   exception Invalid_argument string
 
@@ -159,7 +161,35 @@ module Impl
       val witness () : key
     end
 
-    clone fmap.MapImp as H with type key = K.key, val eq = K.equal
+  scope H
+    type t 'v = abstract {
+      mutable to_fmap: fmap K.key 'v;
+    }
+    meta coercion function to_fmap
+
+    val create (_: int63) : t 'v
+      ensures { result.to_fmap = empty }
+
+    val mem (m: t 'v) (k: K.key) : bool
+      ensures { result <-> mem k m }
+
+    val add (m: t 'v) (k: K.key) (v: 'v) : unit
+      writes  { m }
+      ensures { m = add k v (old m) }
+
+    val find (m: t 'v) (k: K.key) : 'v
+      ensures { S.mem k m.domain }
+      ensures { result = m[k] }
+      raises  { Not_found ->  not (S.mem k m.domain) }
+
+    val remove (m: t 'v) (k: K.key) : unit
+      writes  { m }
+      ensures { m = remove k (old m) }
+
+    val clear (m: t 'v) : unit
+      writes  { m }
+      ensures { m = empty }
+  end
   
     type t 'a = {
       tbl: H.t (int, 'a);
@@ -178,10 +208,10 @@ module Impl
     =
     let witness = K.witness () in
     { 
-      tbl = H.create ();
+      tbl = H.create c;
       lst = DLList.create witness (Int63.to_int c);
       cap = c; 
-      assoc = (fun k -> None); 
+      assoc = (fun _ -> None); 
       age = (fun _ -> c)
     }
       
@@ -211,13 +241,13 @@ module Impl
     let mem (k: K.key) (t: t 'a) : bool 
       ensures { result = true <-> t.assoc k <> None }
     =
-    H.mem k t.tbl
+    H.mem t.tbl k
     
     let find (k: K.key) (t: t 'a) : 'a
       ensures { Some result = t.assoc k }
       raises { Not_found -> t.assoc k = None }
     = 
-    let _index, value = H.find_exn k t.tbl in
+    let _index, value = H.find t.tbl  k in
     value
     
     let find_opt (k: K.key) (t: t 'a) : option 'a 
@@ -228,16 +258,16 @@ module Impl
     let add (k: K.key) (v: 'a) (t: t 'a) : unit 
     =
     try
-      let index, _value = H.find_exn k t.tbl in
+      let index, _value = H.find t.tbl k in
       let new_index = DLList.promote t.lst index in
-      H.add k (new_index, v) t.tbl
+      H.add t.tbl k (new_index, v) 
     with Not_found ->
       let index, removed = DLList.append t.lst k in
       match removed with
       | None -> ()
-      | Some key -> H.remove key t.tbl
+      | Some key -> H.remove t.tbl key
       end;
-      H.add k (index, v) t.tbl
+      H.add t.tbl k (index, v)
     end
   end
 end

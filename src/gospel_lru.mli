@@ -14,25 +14,19 @@ module Make (K : sig
 
   val witness : unit -> key
 end) (H : sig
-  type 'v t 
- 
-  val create : unit -> 'v t
+  type 'v t
 
-  val mem : K.key -> 'v t -> bool
+  val create : int -> 'v t
 
-  val is_empty : 'v t -> bool
+  val mem : 'v t -> K.key -> bool
 
-  val add : K.key -> 'v -> 'v t -> unit
+  val add : 'v t -> K.key -> 'v -> unit
 
-  val find : K.key -> 'v t -> 'v
+  val find : 'v t -> K.key -> 'v
 
-  val find_exn : K.key -> 'v t -> 'v
+  val remove : 'v t -> K.key -> unit
 
-  val remove : K.key -> 'v t -> unit
-
-  val size : 'v t -> Z.t
-
-  val clear : 'v t -> unit t
+  val clear : 'v t -> unit
 end) : sig
   type 'a t
   (** The type for LRU caches. *)

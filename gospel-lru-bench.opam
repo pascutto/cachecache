@@ -16,9 +16,8 @@ license: "MIT"
 depends: [
   "dune" {>= "2.0"}
   "ocaml" {>= "4.07.1"}
-  "zarith"
-  "why3"
-  "alcotest" {with-test}
+  "bechamel"
+  "lru"
 ]
 
 build: [
@@ -37,5 +36,5 @@ build: [
 ]
 
 pin-depends: [
-  [ "why3.dev" "git+https://gitlab.inria.fr/why3/why3.git#4548a86e4f5972f57169151eac3e04a1ddc4e89c" ]
+  [ "bechamel.dev" "git+https://github.com/dinosaure/bechamel.git#2c0f2cb5d885257ea32e36a90c3616755203fbb9"]
 ]

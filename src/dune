@@ -1,22 +1,27 @@
 (library
- (name lru)
- (flags (:standard -w -27-32)) ; for generated files
  (public_name gospel-lru)
+ (name gospel_lru)
+ (flags
+  (:standard -w -27-32))
+ ; for generated files
  (libraries zarith))
 
 (rule
- (targets Lru_impl__DLList.ml Lru_impl__Impl.ml)
- (deps Lru.mli Lru_impl.mlw)
+ (targets gospel_lru_impl__DLList.ml gospel_lru_impl__Impl.ml)
+ (deps gospel_lru.mli gospel_lru_impl.mlw)
  (action
-  (run why3 extract -D ocaml64 -L . --modular -o . Lru_impl.mlw)))
+  (run why3 extract -D ocaml64 -L . --modular -o . gospel_lru_impl.mlw)))
 
 (rule
- (target Lru.ml)
- (deps Lru_impl__Impl.ml)
+ (target gospel_lru.ml)
+ (deps gospel_lru_impl__Impl.ml)
  (action
   (copy %{deps} %{target})))
 
-(rule
- (alias  runtest)
- (action
-  (run why3 replay .)))
+; Disabling for now since there is no handy way to install the solvers
+; through opam
+;
+; (rule
+;  (alias runtest)
+;  (action
+;   (run why3 replay .)))
