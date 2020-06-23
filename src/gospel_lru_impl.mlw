@@ -1,6 +1,44 @@
+module Table
+  use mach.int.Int63
+  use ocaml.Pervasives
+  use map.Map
+  use fmap.Fmap
+  
+  type key
+
+  type t 'v = abstract {
+    mutable to_fmap: fmap key 'v;
+  }
+  meta coercion function to_fmap
+
+  val create (_: int63) : t 'v
+    ensures { result.to_fmap = empty }
+
+  val mem (m: t 'v) (k: key) : bool
+    ensures { result <-> mem k m }
+
+  val add (m: t 'v) (k: key) (v: 'v) : unit
+    writes  { m }
+    ensures { m = add k v (old m) }
+
+  val find (m: t 'v) (k: key) : 'v
+    ensures { S.mem k m.domain }
+    ensures { result = m[k] }
+    raises  { Not_found ->  not (S.mem k m.domain) }
+
+  val remove (m: t 'v) (k: key) : unit
+    writes  { m }
+    ensures { m = remove k (old m) }
+
+  val clear (m: t 'v) : unit
+    writes  { m }
+    ensures { m = empty }
+end
+  
 module DLList
   use int.Int
   use mach.int.Int63
+  use mach.array.Array63
   use option.Option
   use array.Array
 
@@ -147,11 +185,7 @@ module Impl
   use int.Int
   use mach.int.Int63
   use option.Option
-  use ocaml.Exceptions
-  use map.Map
-  use export fmap.Fmap
-
-  exception Invalid_argument string
+  use ocaml.Pervasives
 
   scope Make
  
@@ -160,36 +194,8 @@ module Impl
       val equal (_: key) (_: key) : bool
       val witness () : key
     end
-
-  scope H
-    type t 'v = abstract {
-      mutable to_fmap: fmap K.key 'v;
-    }
-    meta coercion function to_fmap
-
-    val create (_: int63) : t 'v
-      ensures { result.to_fmap = empty }
-
-    val mem (m: t 'v) (k: K.key) : bool
-      ensures { result <-> mem k m }
-
-    val add (m: t 'v) (k: K.key) (v: 'v) : unit
-      writes  { m }
-      ensures { m = add k v (old m) }
-
-    val find (m: t 'v) (k: K.key) : 'v
-      ensures { S.mem k m.domain }
-      ensures { result = m[k] }
-      raises  { Not_found ->  not (S.mem k m.domain) }
-
-    val remove (m: t 'v) (k: K.key) : unit
-      writes  { m }
-      ensures { m = remove k (old m) }
-
-    val clear (m: t 'v) : unit
-      writes  { m }
-      ensures { m = empty }
-  end
+    
+    clone Table as H with type key = K.key
   
     type t 'a = {
       tbl: H.t (int, 'a);

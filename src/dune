@@ -7,10 +7,16 @@
  (libraries zarith))
 
 (rule
- (targets gospel_lru_impl__DLList.ml gospel_lru_impl__Impl.ml)
+ (targets gospel_lru_impl__Impl.ml)
  (deps gospel_lru.mli gospel_lru_impl.mlw)
  (action
-  (run why3 extract -D ocaml64 -L . --modular -o . gospel_lru_impl.mlw)))
+  (run why3 extract -D ocaml64 -L . --modular -o . gospel_lru_impl.Impl)))
+  
+(rule
+ (targets gospel_lru_impl__DLList.ml)
+ (deps gospel_lru.mli gospel_lru_impl.mlw)
+ (action
+  (run why3 extract -D ocaml64 -L . --modular -o . gospel_lru_impl.DLList)))
 
 (rule
  (target gospel_lru.ml)
