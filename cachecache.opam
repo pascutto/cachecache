@@ -1,0 +1,38 @@
+opam-version: "2.0"
+
+maintainer: ["Clément Pascutto <clement@pascutto.fr>"]
+authors: ["Clément Pascutto <clement@pascutto.fr>"]
+synopsis: "Efficient caching library for OCaml"
+description: "Efficient caching library for OCaml"
+
+homepage: "https://github.com/pascutto/cachecache"
+dev-repo: "git+https://github.com/pascutto/cachecache.git"
+doc: "https://pascutto.github.io/cachecache/"
+bug-reports: "https://github.com/pascutto/cachecache/issues"
+license: "MIT"
+
+build: [
+  ["dune" "subst"] {pinned}
+  [
+    "dune"
+    "build"
+    "-p"
+  name
+    "-j"
+    jobs
+    "@install"
+    "@runtest" {with-test}
+  "@doc" {with-doc}
+  ]
+]
+
+depends: [
+  "dune" {>= "2.0"}
+  "ocaml" {>= "4.07.1"}
+  "alcotest" {with-test}
+  "gospel" {with-test}
+]
+
+pin-depends: [
+  [ "gospel.dev" "git+https://github.com/ocaml-gospel/gospel.git#cb679dd4462662d84bdb7dc737a60dc0ba6456e3" ]
+]

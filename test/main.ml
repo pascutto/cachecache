@@ -10,7 +10,7 @@ module K = struct
   let witness () = 0
 end
 
-module Lru = Gospel_lru.Make (K) (Hashtbl.Make (K))
+module Lru = Cachecache.Lru.Make (K)
 
 let split l n =
   let rec aux acc l n =
@@ -40,8 +40,7 @@ let add_fresh_values ~check t n =
       if check then (
         Alcotest.(check bool)
           "Value just added is found (mem)" true (Lru.mem k t);
-        Alcotest.(check int) "Value just added is found (find)" k (Lru.find k t)
-        );
+        Alcotest.(check int) "Value just added is found (find)" k (Lru.find k t));
       loop (k :: l) (i - 1)
   in
   loop [] n

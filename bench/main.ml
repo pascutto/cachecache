@@ -1,15 +1,9 @@
 module K = struct
   type t = int
 
-  type key = t
-
-  let compare = Int.compare
-
   let equal = Int.equal
 
   let hash = Hashtbl.hash
-
-  let witness () = 0
 end
 
 module V = struct
@@ -19,7 +13,7 @@ module V = struct
 end
 
 module GLru = struct
-  module L = Gospel_lru.Make (K) (Hashtbl.Make (K))
+  module L = Cachecache.Lru.Make (K)
 
   type t = int L.t
 
@@ -121,9 +115,10 @@ let benchmark (module B : BENCH) name =
   let instances =
     Instance.[ minor_allocated; major_allocated; monotonic_clock ]
   in
-  let raw_results =
-    Benchmark.all ~run:1000 ~quota:Benchmark.(s 5.) instances (B.test name)
+  let cfg =
+    Benchmark.cfg ~limit:2000 ~quota:(Time.second 0.5) ~kde:(Some 1000) ()
   in
+  let raw_results = Benchmark.all cfg instances (B.test name) in
   ( List.map (fun instance -> Analyze.all ols instance raw_results) instances
     |> Analyze.merge ols instances,
     raw_results )
@@ -145,32 +140,8 @@ let report_notty =
   in
   fun res -> img (window, res) |> Notty_unix.eol |> Notty_unix.output_image
 
-(* let report_json =
- *   let compare k0 k1 =
- *     let a = ref 0 and b = ref 0 in
- *     Scanf.sscanf k0 "%s %d" (fun _ a' -> a := a');
- *     Scanf.sscanf k1 "%s %d" (fun _ b' -> b := b');
- *     !a - !b
- *   in
- *   let nothing _ = Ok () in
- *   fun res buf ->
- *     match
- *       Bechamel_js.(
- *         emit ~dst:(Buffer buf) nothing ~compare ~x_label:Measure.run
- *           ~y_label:(Measure.label Instance.monotonic_clock)
- *           res)
- *     with
- *     | Ok () -> ()
- *     | Error (`Msg err) -> invalid_arg err *)
-
 let () =
   let gres = benchmark (module GBench) "Gospel" in
   let ores = benchmark (module OBench) "Reference" in
-  (* let buf = Buffer.create 0 in
-   * report_json gres buf;
-   * report_json ores buf;
-   * let ch = open_out "output.json" in
-   * Buffer.contents buf |> output_string ch;
-   * close_out ch; *)
   fst gres |> report_notty;
   fst ores |> report_notty

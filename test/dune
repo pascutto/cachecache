@@ -1,4 +1,4 @@
 (test
  (name main)
- (package gospel-lru)
- (libraries gospel-lru alcotest))
+ (package cachecache)
+ (libraries cachecache alcotest))

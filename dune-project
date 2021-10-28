@@ -1,3 +1,3 @@
 (lang dune 2.0)
-(name gospel-lru)
+(name cachecache)
 (implicit_transitive_deps false)

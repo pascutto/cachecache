@@ -1,8 +1,13 @@
 (executable
  (name main)
- (libraries bechamel bechamel.js bechamel.notty notty.unix lru gospel_lru))
+ (libraries bechamel bechamel-notty notty.unix lru cachecache))
 
 (alias
  (name runtest)
- (package gospel-lru-bench)
+ (package cachecache-bench)
  (deps main.exe))
+
+(rule
+ (alias runbench)
+ (action
+  (run ./main.exe)))

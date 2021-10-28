@@ -1,33 +1,9 @@
 (library
- (public_name gospel-lru)
- (name gospel_lru)
- (flags
-  (:standard -w -27-32)))
-
-; for generated files
+ (public_name cachecache)
+ (name cachecache))
 
 (rule
- (targets gospel_lru_impl__Impl.ml)
- (deps gospel_lru.mli gospel_lru_impl.mlw)
+ (alias runtest)
+ (package cachecache)
  (action
-  (run why3 extract -D ocaml64 -L . --modular -o . gospel_lru_impl.Impl)))
-
-(rule
- (targets gospel_lru_impl__DLList.ml)
- (deps gospel_lru.mli gospel_lru_impl.mlw)
- (action
-  (run why3 extract -D ocaml64 -L . --modular -o . gospel_lru_impl.DLList)))
-
-(rule
- (target gospel_lru.ml)
- (deps gospel_lru_impl__Impl.ml)
- (action
-  (copy %{deps} %{target})))
-
-; Disabling for now since there is no handy way to install the solvers
-; through opam
-;
-; (rule
-;  (alias runtest)
-;  (action
-;   (run why3 replay .)))
+  (run gospel check %{dep:lru.mli})))
