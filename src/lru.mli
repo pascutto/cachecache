@@ -67,4 +67,6 @@ end) : sig
           if K.equiv k k' then 0
           else if old t.age k' < old t.age k then old t.age k' + 1
           else old t.age k' *)
+
+  val remove : 'a t -> K.t -> unit
 end

@@ -5,7 +5,7 @@ module Make (K : Hashtbl.HashedType) = struct
 
   type 'a t = { tbl : (int * 'a) H.t; lst : K.t Dllist.t; cap : int }
 
-  let unsafe_v c = { tbl = H.create c; lst = Dllist.create dummy c; cap = c }
+  let unsafe_v c = { tbl = H.create c; lst = Dllist.create c dummy; cap = c }
 
   let v c =
     if c <= 0 then invalid_arg "capacity must be strictly positive";
@@ -40,4 +40,11 @@ module Make (K : Hashtbl.HashedType) = struct
       let index1, removed = Dllist.append t.lst k in
       (match removed with None -> () | Some key -> H.remove t.tbl key);
       H.add t.tbl k (index1, v)
+
+  let remove t k =
+    try
+      let index, _value = H.find t.tbl k in
+      Dllist.remove t.lst index;
+      H.remove t.tbl k
+    with Not_found -> ()
 end

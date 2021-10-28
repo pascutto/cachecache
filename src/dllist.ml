@@ -5,18 +5,20 @@ type 'a t = {
   next : int array;
   mutable first : int;
   mutable last : int;
+  mutable free : int;
   cap : int;
   mutable size : int;
 }
 
-let create witness c =
+let create c witness =
   {
     contents = Array.make c witness;
     witness;
-    prev = Array.make c (-1);
-    next = Array.make c (-1);
+    prev = Array.init c pred;
+    next = Array.init c (fun i -> if i = c - 1 then -1 else succ i);
     first = -1;
     last = -1;
+    free = 0;
     cap = c;
     size = 0;
   }
@@ -24,6 +26,7 @@ let create witness c =
 let clear t =
   t.first <- -1;
   t.last <- -1;
+  t.free <- 0;
   t.size <- 0;
   let o = t.cap - 1 in
   let o1 = 0 in
@@ -35,19 +38,12 @@ let clear t =
 
 let append t v =
   let removed =
-    if t.size = 0 then (
-      let index = t.cap - 1 in
+    if t.free <> -1 then (
+      let index = t.free in
+      t.free <- t.next.(t.free);
       t.contents.(index) <- v;
       t.last <- index;
-      t.first <- index;
-      t.size <- t.size + 1;
-      None)
-    else if t.size < t.cap then (
-      let index = t.first - 1 in
-      t.contents.(index) <- v;
-      t.next.(index) <- t.first;
-      t.prev.(t.first) <- index;
-      t.first <- index;
+      if t.size = 0 then t.first <- index;
       t.size <- t.size + 1;
       None)
     else
@@ -64,14 +60,22 @@ let append t v =
   in
   (t.first, removed)
 
-let promote t i1 =
-  t.next.(t.prev.(i1)) <- t.next.(i1);
-  t.prev.(t.next.(i1)) <- t.prev.(i1);
-  t.prev.(t.first) <- i1;
-  t.next.(i1) <- t.first;
-  t.prev.(i1) <- -1;
-  t.first <- i1;
+let promote t i =
+  if t.prev.(i) <> -1 then t.next.(t.prev.(i)) <- t.next.(i);
+  if t.next.(i) <> -1 then t.prev.(t.next.(i)) <- t.prev.(i);
+  t.prev.(t.first) <- i;
+  t.next.(i) <- t.first;
+  t.prev.(i) <- -1;
+  t.first <- i;
   t.first
+
+let remove t i =
+  if t.prev.(i) <> -1 then t.next.(t.prev.(i)) <- t.next.(i);
+  if t.next.(i) <> -1 then t.prev.(t.next.(i)) <- t.prev.(i);
+  if t.free <> -1 then t.prev.(t.free) <- i;
+  t.next.(i) <- t.free;
+  t.prev.(i) <- -1;
+  t.free <- i
 
 let get t i1 = t.contents.(i1)
 
