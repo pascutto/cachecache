@@ -56,8 +56,8 @@ end) : sig
   (*@ o = find_opt t k
       ensures o = t.assoc k *)
 
-  val add : 'a t -> K.t -> 'a -> unit
-  (*@ add t k v
+  val replace : 'a t -> K.t -> 'a -> unit
+  (*@ replace t k v
       modifies t
       ensures t.assoc k = Some v
       ensures forall k', v'.

@@ -1,7 +1,5 @@
 module K = struct
-  type t = int
-
-  let equal = Int.equal
+  include Int
 
   let hash = Hashtbl.hash
 end
@@ -13,17 +11,9 @@ module V = struct
 end
 
 module GLru = struct
-  module L = Cachecache.Lru.Make (K)
+  include Cachecache.Lru.Make (K)
 
-  type t = int L.t
-
-  let v = L.v
-
-  let add = L.add
-
-  let mem = L.mem
-
-  let find_opt = L.find_opt
+  type nonrec t = int t
 end
 
 module OLru = struct
@@ -35,7 +25,7 @@ module OLru = struct
 
   let mem t k = mem k t
 
-  let add t k v = add k v t
+  let replace t k v = add k v t
 end
 
 let fresh_int =
@@ -56,7 +46,7 @@ module Bench (Lru : sig
 
   val v : int -> t
 
-  val add : t -> K.t -> V.t -> unit
+  val replace : t -> K.t -> V.t -> unit
 
   val mem : t -> K.t -> bool
 
@@ -67,19 +57,19 @@ end) : BENCH = struct
       if i = 0 then ()
       else
         let k = n - i in
-        Lru.add t k k;
+        Lru.replace t k k;
         loop (i - 1)
     in
     loop n
 
   let v cap = Staged.stage (fun () -> Lru.v cap)
 
-  let add cap =
+  let replace cap =
     let t = Lru.v cap in
     fill cap t;
     Staged.stage (fun () ->
         let k = fresh_int () in
-        Lru.add t k k)
+        Lru.replace t k k)
 
   let mem_present cap =
     let t = Lru.v cap in
@@ -100,8 +90,8 @@ end) : BENCH = struct
       [
         Test.make_indexed ~name:"v" ~fmt:"%s %d"
           ~args:[ 100; 10_000; 1_000_000 ] v;
-        Test.make_indexed ~name:"add" ~fmt:"%s %d"
-          ~args:[ 100; 10_000; 1_000_000 ] add;
+        Test.make_indexed ~name:"replace" ~fmt:"%s %d"
+          ~args:[ 100; 10_000; 1_000_000 ] replace;
         Test.make_indexed ~name:"find (present)" ~fmt:"%s %d"
           ~args:[ 100; 10_000; 1_000_000 ] find_present;
         Test.make_indexed ~name:"mem (present)" ~fmt:"%s %d"
@@ -145,7 +135,7 @@ let report_notty =
   fun res -> img (window, res) |> Notty_unix.eol |> Notty_unix.output_image
 
 let () =
-  let gres = benchmark (module GBench) "Gospel" in
-  let ores = benchmark (module OBench) "Reference" in
+  let gres = benchmark (module GBench) "CacheCache.Lru" in
+  let ores = benchmark (module OBench) "Lru" in
   fst gres |> report_notty;
   fst ores |> report_notty

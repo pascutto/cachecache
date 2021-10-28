@@ -31,15 +31,15 @@ module Make (K : Hashtbl.HashedType) = struct
       Some result
     with Not_found -> None
 
-  let add t k v =
+  let replace t k v =
     try
       let index, _value = H.find t.tbl k in
       let new_index = Dllist.promote t.lst index in
-      H.add t.tbl k (new_index, v)
+      H.replace t.tbl k (new_index, v)
     with Not_found ->
       let index1, removed = Dllist.append t.lst k in
       (match removed with None -> () | Some key -> H.remove t.tbl key);
-      H.add t.tbl k (index1, v)
+      H.replace t.tbl k (index1, v)
 
   let remove t k =
     try

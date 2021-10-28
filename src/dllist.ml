@@ -40,14 +40,16 @@ let append t v =
   let removed =
     if t.free <> -1 then (
       let index = t.free in
-      t.free <- t.next.(t.free);
+      t.free <- t.next.(index);
+      if t.free <> -1 then t.prev.(t.free) <- -1;
+      t.next.(index) <- t.first;
+      if t.size <> 0 then t.prev.(t.first) <- index else t.last <- index;
+      t.first <- index;
       t.contents.(index) <- v;
-      t.last <- index;
-      if t.size = 0 then t.first <- index;
       t.size <- t.size + 1;
       None)
     else
-      let removed1 = Some t.contents.(t.last) in
+      let removed = Some t.contents.(t.last) in
       let old_last = t.last in
       t.last <- t.prev.(old_last);
       t.contents.(old_last) <- v;
@@ -56,7 +58,7 @@ let append t v =
       t.next.(old_last) <- t.first;
       t.prev.(t.first) <- old_last;
       t.first <- old_last;
-      removed1
+      removed
   in
   (t.first, removed)
 
@@ -75,7 +77,8 @@ let remove t i =
   if t.free <> -1 then t.prev.(t.free) <- i;
   t.next.(i) <- t.free;
   t.prev.(i) <- -1;
-  t.free <- i
+  t.free <- i;
+  t.size <- t.size - 1
 
 let get t i1 = t.contents.(i1)
 

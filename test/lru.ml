@@ -21,7 +21,7 @@ let fresh_int =
 
 let add_fresh_value t =
   let k = fresh_int () in
-  Lru.add t k k;
+  Lru.replace t k k;
   k
 
 let add_fresh_values ~check t n =
