@@ -31,7 +31,11 @@ module OLru = struct
 
   let v = create ~random:false
 
-  let find_opt = find
+  let find_opt t k = find k t
+
+  let mem t k = mem k t
+
+  let add t k v = add k v t
 end
 
 let fresh_int =
@@ -52,18 +56,18 @@ module Bench (Lru : sig
 
   val v : int -> t
 
-  val add : K.t -> V.t -> t -> unit
+  val add : t -> K.t -> V.t -> unit
 
-  val mem : K.t -> t -> bool
+  val mem : t -> K.t -> bool
 
-  val find_opt : K.t -> t -> V.t option
+  val find_opt : t -> K.t -> V.t option
 end) : BENCH = struct
   let fill n t =
     let rec loop i =
       if i = 0 then ()
       else
         let k = n - i in
-        Lru.add k k t;
+        Lru.add t k k;
         loop (i - 1)
     in
     loop n
@@ -75,21 +79,21 @@ end) : BENCH = struct
     fill cap t;
     Staged.stage (fun () ->
         let k = fresh_int () in
-        Lru.add k k t)
+        Lru.add t k k)
 
   let mem_present cap =
     let t = Lru.v cap in
     fill cap t;
     Staged.stage (fun () ->
         let k = Random.int cap in
-        assert (Lru.mem k t))
+        assert (Lru.mem t k))
 
   let find_present cap =
     let t = Lru.v cap in
     fill cap t;
     Staged.stage (fun () ->
         let k = Random.int cap in
-        assert (Lru.find_opt k t = Some k))
+        assert (Lru.find_opt t k = Some k))
 
   let test name =
     Test.make_grouped ~name

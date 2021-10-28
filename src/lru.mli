@@ -43,21 +43,21 @@ end) : sig
   (*@ c = capacity t
       ensures c = t.cap *)
 
-  val mem : K.t -> 'a t -> bool
-  (*@ b = mem k t
+  val mem : 'a t -> K.t -> bool
+  (*@ b = mem t k
       ensures b = true <-> t.assoc k <> None *)
 
-  val find : K.t -> 'a t -> 'a
-  (*@ v = find k t
+  val find : 'a t -> K.t -> 'a
+  (*@ v = find t k
       ensures t.assoc k = Some v
       raises Not_found -> t.assoc k = None *)
 
-  val find_opt : K.t -> 'a t -> 'a option
-  (*@ o = find_opt k t
+  val find_opt : 'a t -> K.t -> 'a option
+  (*@ o = find_opt t k
       ensures o = t.assoc k *)
 
-  val add : K.t -> 'a -> 'a t -> unit
-  (*@ add k v t
+  val add : 'a t -> K.t -> 'a -> unit
+  (*@ add t k v
       modifies t
       ensures t.assoc k = Some v
       ensures forall k', v'.

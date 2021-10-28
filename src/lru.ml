@@ -19,19 +19,19 @@ module Make (K : Hashtbl.HashedType) = struct
 
   let capacity t = t.cap
 
-  let mem k t = H.mem t.tbl k
+  let mem t k = H.mem t.tbl k
 
-  let find k t =
+  let find t k =
     let _index, value = H.find t.tbl k in
     value
 
-  let find_opt k t =
+  let find_opt t k =
     try
-      let result = find k t in
+      let result = find t k in
       Some result
     with Not_found -> None
 
-  let add k v t =
+  let add t k v =
     try
       let index, _value = H.find t.tbl k in
       let new_index = Dllist.promote t.lst index in

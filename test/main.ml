@@ -1,13 +1,9 @@
 module K = struct
   type t = int
 
-  type key = t
-
   let equal = Int.equal
 
   let hash = Hashtbl.hash
-
-  let witness () = 0
 end
 
 module Lru = Cachecache.Lru.Make (K)
@@ -29,7 +25,7 @@ let fresh_int =
 
 let add_fresh_value t =
   let k = fresh_int () in
-  Lru.add k k t;
+  Lru.add t k k;
   k
 
 let add_fresh_values ~check t n =
@@ -39,8 +35,8 @@ let add_fresh_values ~check t n =
       let k = add_fresh_value t in
       if check then (
         Alcotest.(check bool)
-          "Value just added is found (mem)" true (Lru.mem k t);
-        Alcotest.(check int) "Value just added is found (find)" k (Lru.find k t));
+          "Value just added is found (mem)" true (Lru.mem t k);
+        Alcotest.(check int) "Value just added is found (find)" k (Lru.find t k));
       loop (k :: l) (i - 1)
   in
   loop [] n
@@ -73,11 +69,11 @@ let discard () =
   List.iter
     (fun k ->
       Alcotest.(check bool)
-        "Recently added values are still present" true (Lru.mem k t))
+        "Recently added values are still present" true (Lru.mem t k))
     still_present;
   List.iter
     (fun k ->
-      Alcotest.(check bool) "Old values have been removed" false (Lru.mem k t))
+      Alcotest.(check bool) "Old values have been removed" false (Lru.mem t k))
     removed
 
 let () =
