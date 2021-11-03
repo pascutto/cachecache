@@ -32,7 +32,3 @@ depends: [
   "alcotest" {with-test}
   "gospel" {with-test}
 ]
-
-pin-depends: [
-  [ "gospel.dev" "git+https://github.com/ocaml-gospel/gospel.git#cb679dd4462662d84bdb7dc737a60dc0ba6456e3" ]
-]
