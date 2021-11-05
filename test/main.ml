@@ -1,3 +1,3 @@
 let () =
   Random.self_init ();
-  Alcotest.run "CacheCache" [ Lru.suite ]
+  Alcotest.run "LRU" Lru.suite

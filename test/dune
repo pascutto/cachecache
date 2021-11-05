@@ -1,4 +1,4 @@
 (test
  (name main)
  (package cachecache)
- (libraries cachecache alcotest))
+ (libraries cachecache alcotest fmt))
