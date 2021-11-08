@@ -40,33 +40,33 @@ let append t v =
   let removed =
     if t.free <> -1 then (
       let index = t.free in
-      t.free <- t.next.(index);
+      t.free <- t.next.(t.free);
       if t.free <> -1 then t.prev.(t.free) <- -1;
       t.next.(index) <- t.first;
-      if t.size <> 0 then t.prev.(t.first) <- index else t.last <- index;
+      if t.size = 0 then t.last <- index else t.prev.(t.first) <- index;
       t.first <- index;
       t.contents.(index) <- v;
       t.size <- t.size + 1;
       None)
     else
       let removed = Some t.contents.(t.last) in
-      let old_last = t.last in
-      t.last <- t.prev.(old_last);
-      t.contents.(old_last) <- v;
-      t.next.(t.prev.(old_last)) <- -1;
-      t.prev.(old_last) <- -1;
-      t.next.(old_last) <- t.first;
-      t.prev.(t.first) <- old_last;
-      t.first <- old_last;
+      let new_first = t.last in
+      t.last <- t.prev.(t.last);
+      t.contents.(new_first) <- v;
+      t.next.(t.last) <- -1;
+      t.prev.(new_first) <- -1;
+      t.next.(new_first) <- t.first;
+      t.prev.(t.first) <- new_first;
+      t.first <- new_first;
       removed
   in
   (t.first, removed)
 
 let promote t i =
   if i <> t.first then (
-    (* The element at index [i] is not already at the head of the list *)
     t.next.(t.prev.(i)) <- t.next.(i);
-    if t.next.(i) <> -1 then t.prev.(t.next.(i)) <- t.prev.(i);
+    if i <> t.last then t.prev.(t.next.(i)) <- t.prev.(i)
+    else t.last <- t.prev.(i);
     t.prev.(t.first) <- i;
     t.next.(i) <- t.first;
     t.prev.(i) <- -1;
@@ -74,8 +74,9 @@ let promote t i =
   t.first
 
 let remove t i =
-  if t.prev.(i) <> -1 then t.next.(t.prev.(i)) <- t.next.(i);
-  if t.next.(i) <> -1 then t.prev.(t.next.(i)) <- t.prev.(i);
+  if i <> t.first then t.next.(t.prev.(i)) <- t.next.(i);
+  if i <> t.last then t.prev.(t.next.(i)) <- t.prev.(i)
+  else t.last <- t.prev.(t.last);
   if t.free <> -1 then t.prev.(t.free) <- i;
   t.next.(i) <- t.free;
   t.prev.(i) <- -1;

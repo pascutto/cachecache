@@ -37,9 +37,9 @@ module Make (K : Hashtbl.HashedType) = struct
       let new_index = Dllist.promote t.lst index in
       H.replace t.tbl k (new_index, v)
     with Not_found ->
-      let index1, removed = Dllist.append t.lst k in
+      let index, removed = Dllist.append t.lst k in
       (match removed with None -> () | Some key -> H.remove t.tbl key);
-      H.replace t.tbl k (index1, v)
+      H.replace t.tbl k (index, v)
 
   let remove t k =
     try
