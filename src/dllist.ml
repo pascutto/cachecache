@@ -63,7 +63,7 @@ let append t v =
   (t.first, removed)
 
 let promote t i =
-  if t.prev.(i) <> -1 then (
+  if i <> t.first then (
     (* The element at index [i] is not already at the head of the list *)
     t.next.(t.prev.(i)) <- t.next.(i);
     if t.next.(i) <> -1 then t.prev.(t.next.(i)) <- t.prev.(i);
