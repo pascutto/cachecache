@@ -130,7 +130,14 @@ module TInt_array = Test (struct
   type t = int array
 
   let equal a b =
-    try Array.for_all2 Int.equal a b with Invalid_argument _ -> false
+    let len_a = Array.length a in
+    Int.equal len_a (Array.length b)
+    &&
+    let rec loop = function
+      | -1 -> true
+      | i -> Int.equal a.(i) b.(i) && loop (pred i)
+    in
+    loop (pred len_a)
 
   let hash = Hashtbl.hash
 
