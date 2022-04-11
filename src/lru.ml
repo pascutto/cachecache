@@ -1,4 +1,10 @@
-module Make (K : Hashtbl.HashedType) = struct
+module Make (K : sig
+  type t
+
+  val equal : t -> t -> bool
+  val hash : t -> int
+end) =
+struct
   module H = Hashtbl.Make (K)
 
   let dummy : K.t = Obj.magic (ref 0)
@@ -11,16 +17,20 @@ module Make (K : Hashtbl.HashedType) = struct
     if c <= 0 then invalid_arg "capacity must be strictly positive";
     unsafe_v c
 
+  let is_empty t = Dllist.length t.lst = 0
+  let capacity t = t.cap
+  let size t = H.length t.tbl
+
   let clear t =
     H.clear t.tbl;
     Dllist.clear t.lst
 
-  let is_empty t = Dllist.length t.lst = 0
-  let capacity t = t.cap
   let mem t k = H.mem t.tbl k
 
   let find t k =
-    let _index, value = H.find t.tbl k in
+    let index, value = H.find t.tbl k in
+    let new_index = Dllist.promote t.lst index in
+    H.replace t.tbl k (new_index, value);
     value
 
   let find_opt t k =
@@ -28,6 +38,8 @@ module Make (K : Hashtbl.HashedType) = struct
       let result = find t k in
       Some result
     with Not_found -> None
+
+  let promote t k = ignore (find t k)
 
   let replace t k v =
     try
