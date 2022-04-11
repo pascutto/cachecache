@@ -84,5 +84,4 @@ let remove t i =
   t.size <- t.size - 1
 
 let get t i1 = t.contents.(i1)
-
 let length t = t.size

@@ -16,9 +16,7 @@ module Make (K : Hashtbl.HashedType) = struct
     Dllist.clear t.lst
 
   let is_empty t = Dllist.length t.lst = 0
-
   let capacity t = t.cap
-
   let mem t k = H.mem t.tbl k
 
   let find t k =
