@@ -20,11 +20,8 @@ module OLru = struct
   include Lru.M.Make (K) (V)
 
   let v = create ~random:false
-
   let find_opt t k = find k t
-
   let mem t k = mem k t
-
   let replace t k v = add k v t
 end
 
@@ -45,11 +42,8 @@ module Bench (Lru : sig
   type t
 
   val v : int -> t
-
   val replace : t -> K.t -> V.t -> unit
-
   val mem : t -> K.t -> bool
-
   val find_opt : t -> K.t -> V.t option
 end) : BENCH = struct
   let fill n t =

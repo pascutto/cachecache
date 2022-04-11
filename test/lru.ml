@@ -2,11 +2,8 @@ module Test (K : sig
   type t
 
   val equal : t -> t -> bool
-
   val hash : t -> int
-
   val v : unit -> t
-
   val pp : t Fmt.t
 end) =
 struct
@@ -98,9 +95,7 @@ module TInt = Test (struct
   include Int
 
   let hash = Hashtbl.hash
-
   let v () = Random.int ((1 lsl 30) - 1)
-
   let pp = Fmt.int
 end)
 
@@ -108,9 +103,7 @@ module TFloat = Test (struct
   include Float
 
   let hash = Hashtbl.hash
-
   let v () = Random.float Float.max_float
-
   let pp = Fmt.float
 end)
 
