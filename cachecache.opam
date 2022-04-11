@@ -32,4 +32,5 @@ depends: [
   "alcotest" {with-test}
   "fmt" {with-test}
   "gospel" {with-test}
+  "fpath" {with-test}
 ]
