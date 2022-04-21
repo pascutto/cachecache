@@ -9,7 +9,7 @@ type t = {
   mutable current : int;
 }
 
-let v =
+let v () =
   {
     miss = 0;
     hit = 0;
@@ -22,6 +22,7 @@ let v =
   }
 
 let miss t = t.miss <- t.miss + 1
+let hit t = t.hit <- t.hit + 1
 let replace t = t.replace <- t.replace + 1
 
 let remove t =
