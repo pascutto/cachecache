@@ -40,7 +40,10 @@ struct
     Dllist.clear t.lst;
     Stats.clear t.stats
 
-  let mem t k = H.mem t.tbl k
+  let mem t k =
+    let b = H.mem t.tbl k in
+    if b then Stats.hit t.stats else Stats.miss t.stats;
+    b
 
   let find t k =
     let index, value = H.find t.tbl k in
@@ -64,12 +67,15 @@ struct
       let index, _value = H.find t.tbl k in
       let new_index = Dllist.promote t.lst index in
       H.replace t.tbl k (new_index, v);
-      Stats.replace t.stats
+      Stats.replace_existing t.stats
     with Not_found ->
       let index, removed = Dllist.append t.lst k in
-      (match removed with None -> () | Some key -> H.remove t.tbl key);
-      H.replace t.tbl k (index, v);
-      Stats.add t.stats
+      (match removed with
+      | None -> Stats.replace_add t.stats
+      | Some key ->
+          H.remove t.tbl key;
+          Stats.replace_evict t.stats);
+      H.replace t.tbl k (index, v)
 
   let remove t k =
     try
