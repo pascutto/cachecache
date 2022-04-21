@@ -61,4 +61,4 @@ val add : t -> unit
   ensures t.max_size >= old t.max_size
 *)
 
-val display : t -> unit
+val pp : Format.formatter -> t -> unit
