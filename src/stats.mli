@@ -48,8 +48,9 @@ val remove : t -> unit
 
 val clear : t -> unit
 (*@ clear t
-    modifies t.clear
-    ensures  t.clear = old t.clear + 1
+    modifies t.clear, t.current
+    ensures  t.clear   = old t.clear + 1
+    ensures  t.current = 0
 *)
 
 val add : t -> unit

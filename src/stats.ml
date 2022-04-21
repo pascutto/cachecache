@@ -28,10 +28,11 @@ let remove t =
   t.remove <- t.remove + 1;
   t.current <- t.current - 1
 
-let clear t = t.clear <- t.clear + 1
-let max_size t v = if t.max_size < v then t.max_size <- v
+let clear t =
+  t.clear <- t.clear + 1;
+  t.current <- 0
 
 let add t =
   t.add <- t.add + 1;
   t.current <- t.current + 1;
-  max_size t t.current
+  if t.max_size < t.current then t.max_size <- t.current
