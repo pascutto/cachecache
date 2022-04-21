@@ -28,6 +28,9 @@ struct
     if c <= 0 then invalid_arg "capacity must be strictly positive";
     unsafe_v c
 
+  let get_stats t = t.stats
+
+  (*let display_stats t = Stats.di t.stats*)
   let is_empty t = Dllist.length t.lst = 0
   let capacity t = t.cap
   let size t = H.length t.tbl

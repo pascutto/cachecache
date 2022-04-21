@@ -37,3 +37,12 @@ let add t =
   t.add <- t.add + 1;
   t.current <- t.current + 1;
   if t.max_size < t.current then t.max_size <- t.current
+
+let display t =
+  Format.printf "find miss     : %d\n" t.miss;
+  Format.printf "find hit      : %d\n" t.hit;
+  Format.printf "replace       : %d\n" t.replace;
+  Format.printf "remove        : %d\n" t.remove;
+  Format.printf "clear         : %d\n" t.clear;
+  Format.printf "add           : %d\n" t.add;
+  Format.printf "maximal size  : %d\n" t.max_size

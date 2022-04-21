@@ -60,3 +60,5 @@ val add : t -> unit
   ensures  t.current = old t.current + 1
   ensures t.max_size >= old t.max_size
 *)
+
+val display : t -> unit
