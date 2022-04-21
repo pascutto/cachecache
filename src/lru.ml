@@ -66,15 +66,14 @@ struct
     try
       let index, _value = H.find t.tbl k in
       let new_index = Dllist.promote t.lst index in
-      H.replace t.tbl k (new_index, v);
-      Stats.replace_existing t.stats
+      H.replace t.tbl k (new_index, v)
     with Not_found ->
       let index, removed = Dllist.append t.lst k in
       (match removed with
-      | None -> Stats.replace_add t.stats
+      | None -> Stats.add t.stats
       | Some key ->
           H.remove t.tbl key;
-          Stats.replace_evict t.stats);
+          Stats.discard t.stats);
       H.replace t.tbl k (index, v)
 
   let remove t k =
