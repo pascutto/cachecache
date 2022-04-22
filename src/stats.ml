@@ -3,6 +3,7 @@ type t = {
   mutable hit : int;
   mutable add : int;
   mutable discard : int;
+  mutable replace : int;
   mutable remove : int;
   mutable clear : int;
   mutable max_size : int;
@@ -17,6 +18,7 @@ let v () =
     clear = 0;
     add = 0;
     discard = 0;
+    replace = 0;
     max_size = 0;
     current = 0;
   }
@@ -24,6 +26,7 @@ let v () =
 let miss t = t.miss <- t.miss + 1
 let hit t = t.hit <- t.hit + 1
 let discard t = t.discard <- t.discard + 1
+let replace t = t.replace <- t.replace + 1
 
 let remove t =
   t.remove <- t.remove + 1;
@@ -41,10 +44,10 @@ let add t =
 let pp ppf t =
   Fmt.pf ppf
     {|find miss        : %d
-find hit         : %d 
-add              : %d 
-discard          : %d
-remove           : %d 
-clear            : %d 
-maximal size     : %d|}
+  find hit         : %d
+  add              : %d
+  discard          : %d
+  remove           : %d
+  clear            : %d
+  maximal size     : %d|}
     t.miss t.hit t.add t.discard t.remove t.clear t.max_size

@@ -3,6 +3,7 @@ type t = private {
   mutable hit : int;  (** found counter *)
   mutable add : int;  (** add counter *)
   mutable discard : int;  (** discard counter *)
+  mutable replace : int;  (** replace counter *)
   mutable remove : int;  (** remove counter *)
   mutable clear : int;  (** clear counter *)
   mutable max_size : int;  (** max number of value in t *)
@@ -15,6 +16,7 @@ val v : unit -> t
   ensures t.hit = 0
   ensures t.add = 0
   ensures t.discard = 0
+  ensures t.replace = 0
   ensures t.remove = 0
   ensures t.clear = 0
   ensures t.max_size = 0
@@ -37,6 +39,12 @@ val discard : t -> unit
 (*@ discard t
     modifies t.discard
     ensures  t.discard = old t.discard + 1
+*)
+
+val replace : t -> unit
+(*@ replace t
+    modifies t.replace
+    ensures  t.replace = old t.replace + 1
 *)
 
 val remove : t -> unit
