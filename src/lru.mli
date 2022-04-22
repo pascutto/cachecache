@@ -25,7 +25,7 @@ end) : sig
       ensures t.cap = c
       ensures forall k. t.assoc k = None *)
 
-  val get_stats : 'a t -> Stats.t
+  val stats : 'a t -> Stats.t
   val is_empty : 'a t -> bool
   (*@ b = is_empty t
       ensures b = true <-> forall k. t.assoc k = None *)

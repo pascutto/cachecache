@@ -1,13 +1,12 @@
 type t = private {
-  mutable miss : int;  (** not found counter *)
-  mutable hit : int;  (** found counter *)
-  mutable add : int;  (** add counter *)
+  mutable miss : int;  (** miss counter *)
+  mutable hit : int;  (** hit counter *)
+  mutable add : int;  (** newly added bindings counter *)
+  mutable replace : int;  (** overwritten bindings counter *)
   mutable discard : int;  (** discard counter *)
-  mutable replace : int;  (** replace counter *)
   mutable remove : int;  (** remove counter *)
   mutable clear : int;  (** clear counter *)
-  mutable max_size : int;  (** max number of value in t *)
-  mutable current : int;  (** current number of value in t *)
+  mutable max_size : int;  (** max number of bindings *)
 }
 
 val v : unit -> t
@@ -20,7 +19,6 @@ val v : unit -> t
   ensures t.remove = 0
   ensures t.clear = 0
   ensures t.max_size = 0
-  ensures t.current = 0
 *)
 
 val miss : t -> unit
@@ -49,24 +47,21 @@ val replace : t -> unit
 
 val remove : t -> unit
 (*@ remove t
-    modifies t.remove, t.current
+    modifies t.remove
     ensures  t.remove  = old t.remove + 1
-    ensures  t.current = old t.current - 1
 *)
 
 val clear : t -> unit
 (*@ clear t
-    modifies t.clear, t.current
+    modifies t.clear
     ensures  t.clear   = old t.clear + 1
-    ensures  t.current = 0
 *)
 
-val add : t -> unit
-(*@ add t
-  modifies t.current, t.max_size, t.add
+val add : int -> t -> unit
+(*@ add new_size t
+  modifies t.max_size, t.add
   ensures  t.add = old t.add + 1
-  ensures  t.current = old t.current + 1
-  ensures t.max_size >= old t.max_size
+  ensures  t.max_size >= old t.max_size
 *)
 
 val pp : Format.formatter -> t -> unit

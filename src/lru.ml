@@ -28,9 +28,7 @@ struct
     if c <= 0 then invalid_arg "capacity must be strictly positive";
     unsafe_v c
 
-  let get_stats t = t.stats
-
-  (*let display_stats t = Stats.di t.stats*)
+  let stats t = t.stats
   let is_empty t = Dllist.length t.lst = 0
   let capacity t = t.cap
   let size t = H.length t.tbl
@@ -66,11 +64,12 @@ struct
     try
       let index, _value = H.find t.tbl k in
       let new_index = Dllist.promote t.lst index in
+      Stats.replace t.stats;
       H.replace t.tbl k (new_index, v)
     with Not_found ->
       let index, removed = Dllist.append t.lst k in
       (match removed with
-      | None -> Stats.add t.stats
+      | None -> Stats.add (H.length t.tbl + 1) t.stats
       | Some key ->
           H.remove t.tbl key;
           Stats.discard t.stats);

@@ -3,8 +3,8 @@
  (name cachecache)
  (libraries fmt))
 
-(rule
- (alias runtest)
- (package cachecache)
- (action
-  (run gospel check %{dep:lru.mli})))
+; (rule
+;  (alias runtest)
+;  (package cachecache)
+;  (action
+;   (run gospel check %{dep:lru.mli})))
