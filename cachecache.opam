@@ -29,8 +29,8 @@ build: [
 depends: [
   "dune" {>= "2.0"}
   "ocaml" {>= "4.07.1"}
+  "fmt"
   "alcotest" {with-test}
-  "fmt" {with-test}
   "gospel" {with-test}
   "fpath" {with-test}
 ]
