@@ -80,7 +80,6 @@ struct
       let index, _value = H.find t.tbl k in
       Dllist.remove t.lst index;
       H.remove t.tbl k;
-      Stats.remove t.stats;
-      0
-    with Not_found -> -1
+      Stats.remove t.stats
+    with Not_found -> ()
 end

@@ -5,32 +5,28 @@ module Make (C : S.Cache) (DB : S.DB) = struct
   let capacity t = C.capacity t
   let size t = C.size t
   let clear t = C.clear t
-  let mem t k = if C.mem t k then true else DB.mem k
+  let mem t k = C.mem t k || DB.mem k
   let find t k = try C.find t k with Not_found -> DB.find k
 
   let find_opt t k =
-    match C.find_opt t k with
-    | Some res -> Some res
-    | None -> (
-        try
-          let result = DB.find k in
-          C.replace t k result;
-          Some result
-        with Not_found -> None)
+    try Some (C.find t k)
+    with Not_found -> (
+      try
+        let res = DB.find k in
+        C.replace t k res;
+        Some res
+      with Not_found -> None)
 
-  let promote t k = ignore (C.find t k)
+  let promote t k =
+    (if not (C.mem t k) then
+     try C.replace t k (DB.find k) with Not_found -> ());
+    C.promote t k
 
   let replace t k v =
-    match C.find_opt t k with
-    | Some _ -> C.replace t k v
-    | None -> (
-        try
-          ignore (DB.find k);
-          DB.replace k v;
-          C.replace t k v
-        with Not_found ->
-          DB.add k v;
-          C.replace t k v)
+    if not (C.mem t k || DB.mem k) then DB.replace k v;
+    C.replace t k v
 
-  let remove t k = if C.remove t k == 0 then DB.remove k
+  let remove t k =
+    C.remove t k;
+    DB.remove k
 end
