@@ -17,11 +17,8 @@ module type Cache = sig
 end
 
 module type DB = sig
-  type k
-  type v
-
-  val mem : k -> v -> bool
-  val find : k -> v
-  val add : k -> v -> unit
-  val remove : k -> unit
+  val mem : 'a -> bool
+  val find : 'a -> 'a
+  val add : 'a -> 'a -> unit
+  val remove : 'a -> unit
 end
