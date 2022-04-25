@@ -65,7 +65,7 @@ end) : sig
           else if old t.age k' < old t.age k then old t.age k' + 1
           else old t.age k' *)
 
-  val remove : 'a t -> K.t -> unit
+  val remove : 'a t -> K.t -> int
   (*@ remove t k
       modifies t
       ensures t.assoc k = None *)
