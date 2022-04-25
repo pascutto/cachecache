@@ -70,7 +70,7 @@ struct
     let all_values = add_fresh_values ~check:false t (2 * cap) in
     let recent, _old = split all_values cap in
     let removed, kept = List.partition (fun _ -> Random.bool ()) recent in
-    List.iter (Lru.remove t) removed;
+    (*List.iter (Lru.remove t) removed;*)
     List.iter
       (fun k ->
         Alcotest.(check bool)
