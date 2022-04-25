@@ -19,6 +19,7 @@ end
 module type DB = sig
   val mem : 'a -> bool
   val find : 'a -> 'a
+  val replace : 'a -> 'a -> unit
   val add : 'a -> 'a -> unit
   val remove : 'a -> unit
 end

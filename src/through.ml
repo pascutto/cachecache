@@ -26,23 +26,19 @@ module Make (C : S.Cache) (DB : S.DB) = struct
           Some result
         with Not_found -> None)
 
-  (*let promote t k = ignore (find t k)
+  let promote t k = ignore (C.find t k)
 
-    let replace t k v =
-      try
-        let index, _value = H.find t.tbl k in
-        let new_index = Dllist.promote t.lst index in
-        Stats.replace t.stats;
-        H.replace t.tbl k (new_index, v)
-      with Not_found ->
-        let index, removed = Dllist.append t.lst k in
-        (match removed with
-        | None -> Stats.add (H.length t.tbl + 1) t.stats
-        | Some key ->
-            H.remove t.tbl key;
-            Stats.discard t.stats);
-        H.replace t.tbl k (index, v)
-  *)
+  let replace t k v =
+    match C.find_opt t k with
+    | Some _ -> C.replace t k v
+    | None -> (
+        try
+          ignore (DB.find k);
+          DB.replace k v;
+          C.replace t k v
+        with Not_found ->
+          DB.add k v;
+          C.replace t k v)
 
   let remove t k =
     (*if (C.remove t k) == 0 then B.remove k*)
