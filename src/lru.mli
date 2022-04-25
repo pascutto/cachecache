@@ -66,7 +66,7 @@ end) : sig
           else old t.age k' *)
 
   val remove : 'a t -> K.t -> int
-  (*@ remove t k
+  (*@ c = remove t k
       modifies t
       ensures t.assoc k = None *)
 end

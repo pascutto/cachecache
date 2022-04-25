@@ -13,7 +13,7 @@ module type Cache = sig
   val promote : 'a t -> k -> unit
   val find_opt : 'a t -> k -> 'a option
   val replace : 'a t -> k -> 'a -> unit
-  val remove : 'a t -> k -> unit
+  val remove : 'a t -> k -> int
 end
 
 module type DB = sig

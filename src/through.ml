@@ -43,8 +43,8 @@ module Make (C : S.Cache) (DB : S.DB) = struct
         H.replace t.tbl k (index, v)
   *)
 
-  (*let remove t k =
+  let remove t k =
     (*if (C.remove t k) == 0 then B.remove k*)
     let c = C.remove t k in
-    if c == 0 then DB.remove k*)
+    if c == 0 then DB.remove k
 end
