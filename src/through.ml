@@ -5,16 +5,8 @@ module Make (C : S.Cache) (DB : S.DB) = struct
   let capacity t = C.capacity t
   let size t = C.size t
   let clear t = C.clear t
-
-  let mem t k =
-    let b = C.mem t k in
-    if b then b else DB.mem k
-
-  (*let find t k =
-    let index, value = C.H.find C.t.tbl k in
-    let new_index = Dllist.promote t.lst index in
-    H.replace t.tbl k (new_index, value);
-    value*)
+  let mem t k = if C.mem t k then true else DB.mem k
+  let find t k = try C.find t k with Not_found -> DB.find k
 
   let find_opt t k =
     match C.find_opt t k with
@@ -40,8 +32,5 @@ module Make (C : S.Cache) (DB : S.DB) = struct
           DB.add k v;
           C.replace t k v)
 
-  let remove t k =
-    (*if (C.remove t k) == 0 then B.remove k*)
-    let c = C.remove t k in
-    if c == 0 then DB.remove k
+  let remove t k = if C.remove t k == 0 then DB.remove k
 end
