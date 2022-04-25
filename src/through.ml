@@ -11,21 +11,22 @@ module Make (C : S.Cache) (DB : S.DB) = struct
     if b then b else DB.mem k
 
   (*let find t k =
-      let index, value = H.find t.tbl k in
-      let new_index = Dllist.promote t.lst index in
-      H.replace t.tbl k (new_index, value);
-      value
+    let index, value = C.H.find C.t.tbl k in
+    let new_index = Dllist.promote t.lst index in
+    H.replace t.tbl k (new_index, value);
+    value*)
 
-    let find_opt t k =
-      try
-        let result = find t k in
-        Stats.hit t.stats;
-        Some result
-      with Not_found ->
-        Stats.miss t.stats;
-        None
+  let find_opt t k =
+    match C.find_opt t k with
+    | Some res -> Some res
+    | None -> (
+        try
+          let result = DB.find k in
+          C.replace t k result;
+          Some result
+        with Not_found -> None)
 
-    let promote t k = ignore (find t k)
+  (*let promote t k = ignore (find t k)
 
     let replace t k v =
       try
