@@ -7,6 +7,8 @@ end) =
 struct
   module H = Hashtbl.Make (K)
 
+  type key = K.t
+
   let dummy : K.t = Obj.magic (ref 0)
 
   type 'a t = {
@@ -57,8 +59,6 @@ struct
     with Not_found ->
       Stats.miss t.stats;
       None
-
-  let promote t k = ignore (find t k)
 
   let replace t k v =
     try
