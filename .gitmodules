@@ -1,0 +1,3 @@
+[submodule "psq"]
+	path = psq
+	url = https://github.com/pqwy/psq/
