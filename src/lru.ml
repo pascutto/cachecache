@@ -69,7 +69,7 @@ struct
     with Not_found ->
       let index, removed = Dllist.append t.lst k in
       (match removed with
-      | None -> Stats.add (H.length t.tbl + 1) t.stats
+      | None -> ()
       | Some key ->
           H.remove t.tbl key;
           Stats.discard t.stats);

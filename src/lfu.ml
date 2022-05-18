@@ -105,9 +105,8 @@ struct
       Stats.replace t.stats;
       H.replace t.value k (new_freq_cell, new_last_cell, v)
     with Not_found ->
-      if H.length t.value < t.cap then (
-        add t k v;
-        Stats.add (H.length t.value + 1) t.stats)
+      Stats.add (H.length t.value + 1) t.stats;
+      if H.length t.value < t.cap then add t k v
       else
         let first_freq_cell, _last_freq_cell = Dbllist.get t.frequency in
         let _freq, freq_list = first_freq_cell.content in
