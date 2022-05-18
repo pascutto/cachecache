@@ -41,18 +41,18 @@ end) : sig
   (*@ clear t
       ensures forall k. t.assoc k = None *)
 
-  val mem : 'a t -> key -> bool
-  (*@ b = mem t k
-      ensures b = true <-> t.assoc k <> None *)
-
   val find : 'a t -> key -> 'a
   (*@ v = find t k
       ensures t.assoc k = Some v
       raises Not_found -> t.assoc k = None *)
 
   val find_opt : 'a t -> key -> 'a option
+
   (*@ o = find_opt t k
       ensures o = t.assoc k *)
+  val mem : 'a t -> key -> bool
+  (*@ b = mem t k
+      ensures b = true <-> t.assoc k <> None *)
 
   val replace : 'a t -> key -> 'a -> unit
   (*@ replace t k v

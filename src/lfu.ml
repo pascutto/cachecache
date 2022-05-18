@@ -59,17 +59,24 @@ struct
 
   let find t k =
     let _freq_cell, _key_cell, v = H.find t.value k in
+    Stats.hit t.stats;
     let new_freq_cell, new_last_cell = update t k in
     H.replace t.value k (new_freq_cell, new_last_cell, v);
     v
 
-  let find_opt t k = try Some (find t k) with Not_found -> None
+  let find_opt t k =
+    try Some (find t k)
+    with Not_found ->
+      Stats.miss t.stats;
+      None
 
   let mem t k =
     try
       ignore (find t k);
       true
-    with Not_found -> false
+    with Not_found ->
+      Stats.miss t.stats;
+      false
 
   let add t k v =
     if H.length t.value = 0 then
@@ -95,9 +102,12 @@ struct
     try
       let _freq_cell, _key_cell, _value = H.find t.value k in
       let new_freq_cell, new_last_cell = update t k in
+      Stats.replace t.stats;
       H.replace t.value k (new_freq_cell, new_last_cell, v)
     with Not_found ->
-      if H.length t.value < t.cap then add t k v
+      if H.length t.value < t.cap then (
+        add t k v;
+        Stats.add (H.length t.value + 1) t.stats)
       else
         let first_freq_cell, _last_freq_cell = Dbllist.get t.frequency in
         let _freq, freq_list = first_freq_cell.content in
@@ -107,6 +117,7 @@ struct
           Dbllist.remove t.frequency first_freq_cell;
         let remove_key = first_cell.content in
         H.remove t.value remove_key;
+        Stats.discard t.stats;
         add t k v
 
   let remove t k =
@@ -115,6 +126,7 @@ struct
       H.remove t.value k;
       let _freq, freq_list = freq_cell.content in
       Dbllist.remove freq_list key_cell;
-      if Dbllist.is_empty freq_list then Dbllist.remove t.frequency freq_cell
+      if Dbllist.is_empty freq_list then Dbllist.remove t.frequency freq_cell;
+      Stats.remove t.stats
     with Not_found -> ()
 end

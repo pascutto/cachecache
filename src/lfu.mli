@@ -4,8 +4,8 @@ module Make (K : sig
   val equal : t -> t -> bool
   val hash : t -> int
 end) : sig
-  type key = K.t
   type 'a t
+  type key = K.t
 
   val v : int -> 'a t
   val stats : 'a t -> Stats.t
