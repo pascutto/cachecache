@@ -137,7 +137,33 @@ struct
           (DB_Cached.Cache.mem db_t k);
         Alcotest.(check bool)
           "[Direct] Other values are present" true (Cache.mem t k))
-      kept
+      kept;
+    List.iter
+      (fun k ->
+        DB_Cached.remove db_t k;
+        Cache.remove t k)
+      kept;
+    List.iter
+      (fun k ->
+        Alcotest.(check bool)
+          "[Through-DB] Removed values are not present" false
+          (DB_Cached.mem db_t k);
+        Alcotest.(check bool)
+          "[Through-cache] Removed values are not present" false
+          (DB_Cached.Cache.mem db_t k);
+        Alcotest.(check bool) "[Direct] Cache is empty" true (Cache.is_empty t))
+      kept;
+    let new_value = add_fresh_values ~check:false db_t t (cap / 2) in
+    List.iter
+      (fun k ->
+        Alcotest.(check bool)
+          "[Through-DB] New values are present" true (DB_Cached.mem db_t k);
+        Alcotest.(check bool)
+          "[Through-cache] New values are present" true
+          (DB_Cached.Cache.mem db_t k);
+        Alcotest.(check bool)
+          "[Direct] New values are present after a remove" true (Cache.mem t k))
+      new_value
 
   let suite =
     [
