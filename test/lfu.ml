@@ -7,7 +7,22 @@ module Test (K : sig
   val pp : t Fmt.t
 end) =
 struct
-  module Lfu = Cachecache.Lfu.Make (K)
+  module Cache = Cachecache.Lfu.Make (K)
+  module H = Hashtbl.Make (K)
+
+  module DB = struct
+    type value = K.t
+    type key = K.t
+    type t = value H.t
+
+    let v () = H.create 0
+    let mem = H.mem
+    let find = H.find
+    let replace = H.replace
+    let remove = H.remove
+  end
+
+  module DB_Cached = Cachecache.Through.Make (Cache) (DB)
 
   let key = Alcotest.testable K.pp K.equal
 
@@ -20,69 +35,108 @@ struct
     in
     aux [] l n
 
-  let add_fresh_value t =
+  let add_fresh_value db_t t =
     let k = K.v () in
-    Lfu.replace t k k;
+    DB_Cached.replace db_t k k;
+    Cache.replace t k k;
     k
 
-  let add_fresh_values ~check t n =
+  let add_fresh_values ~check db_t t n =
     let rec loop l i =
-      Fmt.pr "i = %d@." i;
       if i = 0 then l
       else
-        let k = add_fresh_value t in
+        let k = add_fresh_value db_t t in
         if check then (
           Alcotest.(check bool)
-            "Value just added is found (mem)" true (Lfu.mem t k);
+            "[Though-DB] Value just added is found (mem)" true
+            (DB_Cached.mem db_t k);
           Alcotest.(check key)
-            "Value just added is found (find)" k (Lfu.find t k));
+            "[Through-DB] Value just added is found (find)" k
+            (DB_Cached.find db_t k);
+          Alcotest.(check bool)
+            "[Through-cache] Value just added is found (mem)" true
+            (DB_Cached.Cache.mem db_t k);
+          Alcotest.(check key)
+            "[Through-cache] Value just added is found in cache (find)" k
+            (DB_Cached.Cache.find db_t k);
+          Alcotest.(check bool)
+            "[Direct] Value just added is found (mem)" true (Cache.mem t k);
+          Alcotest.(check key)
+            "[Direct] Value just added is found (find)" k (Cache.find t k));
         loop (k :: l) (i - 1)
     in
     loop [] n
 
   let mem () =
     let cap = 10 in
-    let t = Lfu.v cap in
-    ignore (add_fresh_values ~check:true t cap : K.t list)
+    let db_t = DB_Cached.v cap in
+    let t = Cache.v cap in
+    ignore (add_fresh_values ~check:true db_t t cap : K.t list)
 
   let mem_over_capacity () =
     let cap = 10 in
-    let t = Lfu.v cap in
-    ignore (add_fresh_values ~check:true t (2 * cap) : K.t list)
+    let db_t = DB_Cached.v cap in
+    let t = Cache.v cap in
+    ignore (add_fresh_values ~check:true db_t t (2 * cap) : K.t list)
 
   let discard () =
     let cap = 10 in
-    let t = Lfu.v cap in
-    let all_values = add_fresh_values ~check:false t cap in
+    let db_t = DB_Cached.v cap in
+    let t = Cache.v cap in
+    let all_values = add_fresh_values ~check:false db_t t cap in
     match all_values with
     | h :: tl ->
         List.iter
           (fun k ->
             Alcotest.(check bool)
-              "Added values are still present" true (Lfu.mem t k))
+              "[Direct] Added values are still present" true (Cache.mem t k))
           tl;
         let k = K.v () in
-        Lfu.replace t k k;
-        Alcotest.(check int) "Size is still ten" 10 (Lfu.size t);
-        Alcotest.(check bool) "Unused value are removed" false (Lfu.mem t h);
-        Alcotest.(check bool) "Added value is still present" true (Lfu.mem t k)
+        Cache.replace t k k;
+        Alcotest.(check int) "[Direct] Size is still ten" 10 (Cache.size t);
+        Alcotest.(check bool)
+          "[Direct] Unused value are removed" false (Cache.mem t h);
+        Alcotest.(check bool)
+          "[Through-cache] Unused value are removed" true
+          (DB_Cached.Cache.mem db_t h);
+        Alcotest.(check bool)
+          "[Through-DB] Unused value are removed" true (DB_Cached.mem db_t h);
+        Alcotest.(check bool)
+          "[Direct] Added value is still present" true (Cache.mem t k)
     | [] -> assert false
 
   let remove () =
     let cap = 10 in
-    let t = Lfu.v cap in
-    let all_values = add_fresh_values ~check:false t (2 * cap) in
+    let db_t = DB_Cached.v cap in
+    let t = Cache.v cap in
+    let all_values = add_fresh_values ~check:false db_t t (2 * cap) in
     let recent, _old = split all_values cap in
     let removed, kept = List.partition (fun _ -> Random.bool ()) recent in
-    List.iter (Lfu.remove t) removed;
     List.iter
       (fun k ->
-        Alcotest.(check bool)
-          "Removed values are not present" false (Lfu.mem t k))
+        DB_Cached.remove db_t k;
+        Cache.remove t k)
       removed;
     List.iter
       (fun k ->
-        Alcotest.(check bool) "Other values are present" true (Lfu.mem t k))
+        Alcotest.(check bool)
+          "[Through-DB] Removed values are not present" false
+          (DB_Cached.mem db_t k);
+        Alcotest.(check bool)
+          "[Through-cache] Removed values are not present" false
+          (DB_Cached.Cache.mem db_t k);
+        Alcotest.(check bool)
+          "[Direct] Removed values are not present" false (Cache.mem t k))
+      removed;
+    List.iter
+      (fun k ->
+        Alcotest.(check bool)
+          "[Through-DB] Other values are present" true (DB_Cached.mem db_t k);
+        Alcotest.(check bool)
+          "[Through-cache] Other values are present" true
+          (DB_Cached.Cache.mem db_t k);
+        Alcotest.(check bool)
+          "[Direct] Other values are present" true (Cache.mem t k))
       kept
 
   let suite =
@@ -145,10 +199,19 @@ module TInt_array = Test (struct
   let pp = Fmt.(array int)
 end)
 
+module Lfu = Cachecache.Lfu.Make (struct
+  include String
+
+  let hash = Hashtbl.hash
+end)
+
+module Replay = Replay.Make (Lfu)
+
 let suite =
   [
     ("int", TInt.suite);
     ("float", TFloat.suite);
     ("string", TString.suite);
     ("int array", TInt_array.suite);
+    ("replay", Replay.suite);
   ]

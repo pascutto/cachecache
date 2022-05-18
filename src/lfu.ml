@@ -8,9 +8,11 @@ struct
   module H = Hashtbl.Make (K)
 
   type key = K.t
+  type freq_cell = (int * key Dbllist.t) Dbllist.cell
+  type key_cell = key Dbllist.cell
 
   type 'a t = {
-    value : ((int * key Dbllist.t) Dbllist.cell * key Dbllist.cell * 'a) H.t;
+    value : (freq_cell * key_cell * 'a) H.t;
     frequency : (int * key Dbllist.t) Dbllist.t;
     cap : int;
     stats : Stats.t;
@@ -39,7 +41,6 @@ struct
     Stats.clear t.stats
 
   let update t k =
-    assert (H.mem t.value k);
     let freq_cell, key_cell, _value = H.find t.value k in
     let freq, freq_list = freq_cell.content in
     let freq_next, _freq_next_list = freq_cell.next.content in
@@ -48,14 +49,15 @@ struct
      let real_freq = freq + 1 in
      ignore
        (Dbllist.append_after t.frequency freq_cell
-          (real_freq, real_next_freq_list)));
+          (real_freq, real_next_freq_list)
+         : freq_cell));
     Dbllist.remove freq_list key_cell;
     let _freq_next, freq_next_list = freq_cell.next.content in
     if Dbllist.is_empty freq_list then Dbllist.remove t.frequency freq_cell;
     let last = Dbllist.append freq_next_list k in
     (freq_cell.next, last)
 
-  let find (t : 'a t) (k : key) : 'a =
+  let find t k =
     let _freq_cell, _key_cell, v = H.find t.value k in
     let new_freq_cell, new_last_cell = update t k in
     H.replace t.value k (new_freq_cell, new_last_cell, v);
@@ -82,13 +84,14 @@ struct
        let real_first_freq_list = Dbllist.create () in
        ignore
          (Dbllist.append_before t.frequency first_freq_cell
-            (1, real_first_freq_list)));
+            (1, real_first_freq_list)
+           : freq_cell));
       let first_freq_cell, _last_freq_cell = Dbllist.get t.frequency in
       let _freq, freq_list = first_freq_cell.content in
       let new_cell = Dbllist.append freq_list k in
       H.replace t.value k (first_freq_cell, new_cell, v)
 
-  let replace (t : 'a t) (k : key) (v : 'a) =
+  let replace t k v =
     try
       let _freq_cell, _key_cell, _value = H.find t.value k in
       let new_freq_cell, new_last_cell = update t k in
@@ -112,10 +115,6 @@ struct
       H.remove t.value k;
       let _freq, freq_list = freq_cell.content in
       Dbllist.remove freq_list key_cell;
-      if Dbllist.is_empty freq_list then (
-        let prev_freq_cell = freq_cell.prev in
-        let next_freq_cell = freq_cell.next in
-        prev_freq_cell.next <- next_freq_cell;
-        next_freq_cell.prev <- prev_freq_cell)
+      if Dbllist.is_empty freq_list then Dbllist.remove t.frequency freq_cell
     with Not_found -> ()
 end

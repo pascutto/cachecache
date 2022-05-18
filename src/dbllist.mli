@@ -1,4 +1,4 @@
-type 'a cell = {
+type 'a cell = private {
   mutable content : 'a;
   mutable prev : 'a cell;
   mutable next : 'a cell;
