@@ -1,7 +1,7 @@
 (library
  (public_name cachecache)
  (name cachecache)
- (libraries fmt))
+ (libraries fmt vector))
 
 ; (rule
 ;  (alias runtest)
