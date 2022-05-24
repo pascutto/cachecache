@@ -88,3 +88,66 @@ let remove t i =
 
 let get t i1 = Vector.get t.contents i1
 let length t = t.size
+let is_empty t = Vector.is_empty t.contents
+
+let get_ends t =
+  if not (Vector.is_empty t.contents) then (t.first, t.last)
+  else raise Not_found
+
+let insert_head t v =
+  let removed =
+    if t.free <> -1 then (
+      let new_index = t.free in
+      t.free <- Vector.get t.next t.free;
+      if t.free <> -1 then Vector.set t.prev t.free (-1);
+      Vector.set t.prev new_index t.last;
+      if t.size = 0 then t.first <- new_index
+      else Vector.set t.next t.last new_index;
+      t.last <- new_index;
+      Vector.set t.contents new_index v;
+      t.size <- t.size + 1;
+      None)
+    else
+      let removed = Some (Vector.get t.contents t.last) in
+      let new_first = t.last in
+      t.last <- Vector.get t.prev t.last;
+      Vector.set t.contents new_first v;
+      Vector.set t.next t.last (-1);
+      Vector.set t.prev new_first (-1);
+      Vector.set t.next new_first t.first;
+      Vector.set t.prev t.first new_first;
+      t.first <- new_first;
+      removed
+  in
+  (t.first, removed)
+
+let insert_before t v i =
+  let removed =
+    if t.free <> -1 then (
+      let new_index = t.free in
+      t.free <- Vector.get t.next t.free;
+      if t.free <> -1 then Vector.set t.prev t.free (-1);
+      let i_prev = Vector.get t.prev i in
+      Vector.set t.prev new_index i_prev;
+      Vector.set t.next i_prev new_index;
+      Vector.set t.prev i new_index;
+      Vector.set t.next new_index i;
+      if t.size = 0 then (
+        t.first <- new_index;
+        t.last <- new_index);
+      Vector.set t.contents new_index v;
+      t.size <- t.size + 1;
+      None)
+    else
+      let removed = Some (Vector.get t.contents t.last) in
+      let new_first = t.last in
+      t.last <- Vector.get t.prev t.last;
+      Vector.set t.contents new_first v;
+      Vector.set t.next t.last (-1);
+      Vector.set t.prev new_first (-1);
+      Vector.set t.next new_first t.first;
+      Vector.set t.prev t.first new_first;
+      t.first <- new_first;
+      removed
+  in
+  (t.first, removed)

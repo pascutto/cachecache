@@ -8,20 +8,22 @@ struct
   module H = Hashtbl.Make (K)
 
   type key = K.t
-  type freq_cell = (int * key Dbllist.t) Dbllist.cell
-  type key_cell = key Dbllist.cell
+  type freq_index = int
+  type key_index = int
 
   type 'a t = {
-    value : (freq_cell * key_cell * 'a) H.t;
-    frequency : (int * key Dbllist.t) Dbllist.t;
+    value : (freq_index * key_index * 'a) H.t;
+    frequency : (int * key Dllist.t) Dllist.t;
     cap : int;
     stats : Stats.t;
   }
 
+  let dummy : K.t = Obj.magic (ref 0)
+
   let unsafe_v c =
     {
       value = H.create c;
-      frequency = Dbllist.create ();
+      frequency = Dllist.create 0 (0, Dllist.create 0 dummy);
       cap = c;
       stats = Stats.v ();
     }
@@ -37,7 +39,7 @@ struct
 
   let clear t =
     H.clear t.value;
-    Dbllist.clear t.frequency;
+    Dllist.clear t.frequency;
     Stats.clear t.stats
 
   let update t k =
@@ -80,19 +82,21 @@ struct
 
   let add t k v =
     if H.length t.value = 0 then
-      let first_freq_list = Dbllist.create () in
-      let new_cell = Dbllist.append first_freq_list k in
-      let first_freq_cell = Dbllist.append t.frequency (1, first_freq_list) in
-      H.replace t.value k (first_freq_cell, new_cell, v)
+      let first_freq_list = Dllist.create 0 dummy in
+      let new_key_index, _opt = Dllist.append first_freq_list k in
+      let first_key_index, _opt =
+        Dllist.append t.frequency (1, first_freq_list)
+      in
+      H.replace t.value k (first_key_index, new_key_index, v)
     else
-      let first_freq_cell, _last_freq_cell = Dbllist.get t.frequency in
-      let freq, _freq_list = first_freq_cell.content in
+      let first_freq_index, _last_freq_index = Dllist.get_ends t.frequency in
+
+      let freq, _key_list = Dllist.get t.frequency first_freq_index in
       (if freq <> 1 then
-       let real_first_freq_list = Dbllist.create () in
-       ignore
-         (Dbllist.append_before t.frequency first_freq_cell
-            (1, real_first_freq_list)
-           : freq_cell));
+       let real_first_freq_list = Dllist.create 0 dummy in
+
+       Dllist.append_before t.frequency first_freq_cell (1, real_first_freq_list));
+
       let first_freq_cell, _last_freq_cell = Dbllist.get t.frequency in
       let _freq, freq_list = first_freq_cell.content in
       let new_cell = Dbllist.append freq_list k in
@@ -121,11 +125,11 @@ struct
 
   let remove t k =
     try
-      let freq_cell, key_cell, _value = H.find t.value k in
+      let freq_index, key_index, _value = H.find t.value k in
       H.remove t.value k;
-      let _freq, freq_list = freq_cell.content in
-      Dbllist.remove freq_list key_cell;
-      if Dbllist.is_empty freq_list then Dbllist.remove t.frequency freq_cell;
+      let _freq, freq_list = Dllist.get t.frequency freq_index in
+      Dllist.remove freq_list key_index;
+      (* if Dbllist.is_empty freq_list then Dllist.remove t.frequency freq_cell; *)
       Stats.remove t.stats
     with Not_found -> ()
 end
