@@ -1,6 +1,7 @@
 (library
  (public_name cachecache)
  (name cachecache)
+  (flags :standard -w -21)
  (libraries fmt vector))
 
 ; (rule
