@@ -25,6 +25,8 @@ let create cap witness =
   }
 
 let create_list t = { first = -1; last = -1; size = 0; t }
+let next l i = l.t.next.(i)
+let ends l = (l.first, l.last)
 
 let clear l =
   let rec aux i =
@@ -89,3 +91,28 @@ let remove l i =
 
 let get l i1 = l.t.contents.(i1)
 let length l = l.size
+let is_empty l = l.size = 0
+
+let append_before l i v =
+  let new_index = l.t.free in
+  l.t.free <- l.t.next.(l.t.free);
+  if l.t.free <> -1 then l.t.prev.(l.t.free) <- -1;
+  if l.first = i then l.first <- new_index
+  else l.t.next.(l.t.prev.(i)) <- new_index;
+  l.t.next.(new_index) <- i;
+  l.t.prev.(i) <- new_index;
+  l.t.contents.(new_index) <- v;
+  l.size <- l.size + 1;
+  new_index
+
+let append_after l i v =
+  let new_index = l.t.free in
+  l.t.free <- l.t.next.(l.t.free);
+  if l.t.free <> -1 then l.t.prev.(l.t.free) <- -1;
+  if l.last = i then l.last <- new_index
+  else l.t.prev.(l.t.next.(i)) <- new_index;
+  l.t.prev.(new_index) <- i;
+  l.t.next.(i) <- new_index;
+  l.t.contents.(new_index) <- v;
+  l.size <- l.size + 1;
+  new_index

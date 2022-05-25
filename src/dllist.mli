@@ -9,3 +9,8 @@ val promote : 'a l -> int -> int
 val remove : 'a l -> int -> unit
 val get : 'a l -> int -> 'a
 val clear : 'a l -> unit
+val is_empty : 'a l -> bool
+val append_before : 'a l -> int -> 'a -> int
+val append_after : 'a l -> int -> 'a -> int
+val next : 'a l -> int -> int
+val ends : 'a l -> int * int
