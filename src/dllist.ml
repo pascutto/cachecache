@@ -14,6 +14,18 @@ type 'a l = {
   t : 'a t;
 }
 
+let status l =
+  Fmt.pr "first : %d\n" l.first;
+  Fmt.pr "last  : %d\n" l.last;
+  for i = 0 to Array.length l.t.prev - 1 do
+    Fmt.pr " %d " l.t.prev.(i)
+  done;
+  Fmt.pr "\n\n";
+  for i = 0 to Array.length l.t.next - 1 do
+    Fmt.pr " %d " l.t.next.(i)
+  done;
+  Fmt.pr "\n\n"
+
 let create cap witness =
   {
     cap;
@@ -45,6 +57,8 @@ let clear l =
 let append l v =
   let removed =
     if l.t.free <> -1 then (
+      Fmt.pr ":)\n";
+      status l;
       let index = l.t.free in
       l.t.free <- l.t.next.(l.t.free);
       if l.t.free <> -1 then l.t.prev.(l.t.free) <- -1;
@@ -66,6 +80,7 @@ let append l v =
       l.first <- new_first;
       removed
   in
+
   (l.first, removed)
 
 let promote l i =

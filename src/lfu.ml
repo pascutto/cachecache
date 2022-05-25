@@ -23,6 +23,7 @@ struct
 
   let unsafe_v c =
     let tbl = Dllist.create c dummy in
+
     let freq =
       Dllist.create c (-1, Dllist.create_list tbl) |> Dllist.create_list
     in
@@ -43,6 +44,7 @@ struct
     Stats.clear t.stats
 
   let update t k =
+    Fmt.pr "u\n";
     let freq_index, key_index, _value = H.find t.value k in
     let freq, freq_list = Dllist.get t.frequency freq_index in
     let freq_next, _freq_next_list =
@@ -63,6 +65,7 @@ struct
     (new_freq_index, new_key_index)
 
   let find t k =
+    Fmt.pr "-\n";
     let _freq_index, _key_index, v = H.find t.value k in
     Stats.hit t.stats;
     let new_freq_index, new_last_index = update t k in
@@ -76,6 +79,7 @@ struct
       None
 
   let mem t k =
+    Fmt.pr "m\n";
     try
       ignore (find t k);
       true
@@ -84,6 +88,10 @@ struct
       false
 
   let add t k v =
+    Fmt.pr "add---\n";
+    Dllist.status t.frequency;
+    Fmt.pr "/add---\n";
+
     if H.length t.value = 0 then
       let first_freq_list = Dllist.create_list t.tbl in
       let new_key_index, _opt = Dllist.append first_freq_list k in
@@ -108,6 +116,9 @@ struct
       H.replace t.value k (new_first_freq_index, new_index, v)
 
   let replace t k v =
+    Fmt.pr "R---\n";
+    Dllist.status t.frequency;
+    Fmt.pr "/R---\n";
     try
       let _freq_index, _key_index, _value = H.find t.value k in
       let new_freq_index, new_key_index = update t k in
@@ -129,6 +140,7 @@ struct
         add t k v
 
   let remove t k =
+    Fmt.pr "r\n";
     try
       let freq_index, key_index, _value = H.find t.value k in
       H.remove t.value k;

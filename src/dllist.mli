@@ -14,3 +14,4 @@ val append_before : 'a l -> int -> 'a -> int
 val append_after : 'a l -> int -> 'a -> int
 val next : 'a l -> int -> int
 val ends : 'a l -> int * int
+val status : 'a l -> unit
