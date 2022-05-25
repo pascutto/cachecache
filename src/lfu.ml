@@ -18,12 +18,16 @@ struct
     stats : Stats.t;
   }
 
+  type 'a l = { contents : 'a array; mutable free : int }
+
   let dummy : K.t = Obj.magic (ref 0)
 
   let unsafe_v c =
+    let key_lst = { contents = Array.make c dummy; free = 0 } in
+    let freq_lst = { contents = Array.make c dummy; free = 0 } in
     {
       value = H.create c;
-      frequency = Dllist.create 0 (0, Dllist.create 0 dummy);
+      frequency = Dllist.create freq_lst 0 (0, Dllist.create key_lst 0 dummy);
       cap = c;
       stats = Stats.v ();
     }
