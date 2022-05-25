@@ -1,153 +1,91 @@
 type 'a t = {
-  contents : 'a Vector.t;
-  witness : 'a;
-  prev : int Vector.t;
-  next : int Vector.t;
-  mutable first : int;
-  mutable last : int;
-  mutable free : int;
   cap : int;
-  mutable size : int;
+  witness : 'a;
+  contents : 'a array;
+  mutable free : int;
+  prev : int array;
+  next : int array;
 }
 
-let create c witness =
+type 'a l = {
+  mutable first : int;
+  mutable last : int;
+  mutable size : int;
+  t : 'a t;
+}
+
+let create cap witness =
   {
-    contents = Vector.make c ~dummy:witness;
+    cap;
     witness;
-    prev = Vector.init c ~dummy:0 pred;
-    next = Vector.init c ~dummy:0 (fun i -> if i = c - 1 then -1 else succ i);
-    first = -1;
-    last = -1;
+    contents = Array.make cap witness;
     free = 0;
-    cap = c;
-    size = 0;
+    prev = Array.init cap pred;
+    next = Array.init cap (fun i -> if i = cap - 1 then -1 else succ i);
   }
 
-let clear t =
-  t.first <- -1;
-  t.last <- -1;
-  t.free <- 0;
-  t.size <- 0;
-  let o = t.cap - 1 in
-  let o1 = 0 in
-  for i = o1 to o do
-    Vector.set t.contents i t.witness;
-    Vector.set t.prev i (-1);
-    Vector.set t.next i (-1)
-  done
+let create_list t = { first = -1; last = -1; size = 0; t }
 
-let append t v =
+let clear l =
+  let rec aux i =
+    if i = -1 then ()
+    else (
+      l.t.contents.(i) <- l.t.witness;
+      l.t.prev.(i) <- -1;
+      l.t.next.(i) <- -1;
+      aux l.t.next.(i))
+  in
+  aux l.first;
+  l.first <- -1;
+  l.last <- -1;
+  l.size <- 0
+
+let append l v =
   let removed =
-    if t.free <> -1 then (
-      let index = t.free in
-      t.free <- Vector.get t.next t.free;
-      if t.free <> -1 then Vector.set t.prev t.free (-1);
-      Vector.set t.next index t.first;
-      if t.size = 0 then t.last <- index else Vector.set t.prev t.first index;
-      t.first <- index;
-      Vector.set t.contents index v;
-      t.size <- t.size + 1;
+    if l.t.free <> -1 then (
+      let index = l.t.free in
+      l.t.free <- l.t.next.(l.t.free);
+      if l.t.free <> -1 then l.t.prev.(l.t.free) <- -1;
+      l.t.next.(index) <- l.first;
+      if l.size = 0 then l.last <- index else l.t.prev.(l.first) <- index;
+      l.first <- index;
+      l.t.contents.(index) <- v;
+      l.size <- l.size + 1;
       None)
     else
-      let removed = Some (Vector.get t.contents t.last) in
-      let new_first = t.last in
-      t.last <- Vector.get t.prev t.last;
-      Vector.set t.contents new_first v;
-      Vector.set t.next t.last (-1);
-      Vector.set t.prev new_first (-1);
-      Vector.set t.next new_first t.first;
-      Vector.set t.prev t.first new_first;
-      t.first <- new_first;
+      let removed = Some l.t.contents.(l.last) in
+      let new_first = l.last in
+      l.last <- l.t.prev.(l.last);
+      l.t.contents.(new_first) <- v;
+      l.t.next.(l.last) <- -1;
+      l.t.prev.(new_first) <- -1;
+      l.t.next.(new_first) <- l.first;
+      l.t.prev.(l.first) <- new_first;
+      l.first <- new_first;
       removed
   in
-  (t.first, removed)
+  (l.first, removed)
 
-let promote t i =
-  if i <> t.first then (
-    Vector.set t.next (Vector.get t.prev i) (Vector.get t.next i);
-    if i <> t.last then
-      Vector.set t.prev (Vector.get t.next i) (Vector.get t.prev i)
-    else t.last <- Vector.get t.prev i;
-    Vector.set t.prev t.first i;
-    Vector.set t.next i t.first;
-    Vector.set t.prev i (-1);
-    t.first <- i);
-  t.first
+let promote l i =
+  if i <> l.first then (
+    l.t.next.(l.t.prev.(i)) <- l.t.next.(i);
+    if i <> l.last then l.t.prev.(l.t.next.(i)) <- l.t.prev.(i)
+    else l.last <- l.t.prev.(i);
+    l.t.prev.(l.first) <- i;
+    l.t.next.(i) <- l.first;
+    l.t.prev.(i) <- -1;
+    l.first <- i);
+  l.first
 
-let remove t i =
-  if i <> t.first then
-    Vector.set t.next (Vector.get t.prev i) (Vector.get t.next i);
-  if i <> t.last then
-    Vector.set t.prev (Vector.get t.next i) (Vector.get t.prev i)
-  else t.last <- Vector.get t.prev t.last;
-  if t.free <> -1 then Vector.set t.prev t.free i;
-  Vector.set t.next i t.free;
-  Vector.set t.prev i (-1);
-  t.free <- i;
-  t.size <- t.size - 1
+let remove l i =
+  if i <> l.first then l.t.next.(l.t.prev.(i)) <- l.t.next.(i);
+  if i <> l.last then l.t.prev.(l.t.next.(i)) <- l.t.prev.(i)
+  else l.last <- l.t.prev.(l.last);
+  if l.t.free <> -1 then l.t.prev.(l.t.free) <- i;
+  l.t.next.(i) <- l.t.free;
+  l.t.prev.(i) <- -1;
+  l.t.free <- i;
+  l.size <- l.size - 1
 
-let get t i1 = Vector.get t.contents i1
-let length t = t.size
-let is_empty t = Vector.is_empty t.contents
-
-let get_ends t =
-  if not (Vector.is_empty t.contents) then (t.first, t.last)
-  else raise Not_found
-
-let insert_head t v =
-  let removed =
-    if t.free <> -1 then (
-      let new_index = t.free in
-      t.free <- Vector.get t.next t.free;
-      if t.free <> -1 then Vector.set t.prev t.free (-1);
-      Vector.set t.prev new_index t.last;
-      if t.size = 0 then t.first <- new_index
-      else Vector.set t.next t.last new_index;
-      t.last <- new_index;
-      Vector.set t.contents new_index v;
-      t.size <- t.size + 1;
-      None)
-    else
-      let removed = Some (Vector.get t.contents t.last) in
-      let new_first = t.last in
-      t.last <- Vector.get t.prev t.last;
-      Vector.set t.contents new_first v;
-      Vector.set t.next t.last (-1);
-      Vector.set t.prev new_first (-1);
-      Vector.set t.next new_first t.first;
-      Vector.set t.prev t.first new_first;
-      t.first <- new_first;
-      removed
-  in
-  (t.first, removed)
-
-let insert_before t v i =
-  let removed =
-    if t.free <> -1 then (
-      let new_index = t.free in
-      t.free <- Vector.get t.next t.free;
-      if t.free <> -1 then Vector.set t.prev t.free (-1);
-      let i_prev = Vector.get t.prev i in
-      Vector.set t.prev new_index i_prev;
-      Vector.set t.next i_prev new_index;
-      Vector.set t.prev i new_index;
-      Vector.set t.next new_index i;
-      if t.size = 0 then (
-        t.first <- new_index;
-        t.last <- new_index);
-      Vector.set t.contents new_index v;
-      t.size <- t.size + 1;
-      None)
-    else
-      let removed = Some (Vector.get t.contents t.last) in
-      let new_first = t.last in
-      t.last <- Vector.get t.prev t.last;
-      Vector.set t.contents new_first v;
-      Vector.set t.next t.last (-1);
-      Vector.set t.prev new_first (-1);
-      Vector.set t.next new_first t.first;
-      Vector.set t.prev t.first new_first;
-      t.first <- new_first;
-      removed
-  in
-  (t.first, removed)
+let get l i1 = l.t.contents.(i1)
+let length l = l.size

@@ -1,12 +1,11 @@
 type 'a t
+type 'a l
 
 val create : int -> 'a -> 'a t
-val length : 'a t -> int
-val append : 'a t -> 'a -> int * 'a option
-val promote : 'a t -> int -> int
-val remove : 'a t -> int -> unit
-val get : 'a t -> int -> 'a
-val clear : 'a t -> unit
-val is_empty : 'a t -> bool
-val get_ends : 'a t -> int * int
-val insert_before : 'a t -> 'a -> int
+val create_list : 'a t -> 'a l
+val length : 'a l -> int
+val append : 'a l -> 'a -> int * 'a option
+val promote : 'a l -> int -> int
+val remove : 'a l -> int -> unit
+val get : 'a l -> int -> 'a
+val clear : 'a l -> unit

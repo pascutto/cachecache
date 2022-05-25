@@ -13,7 +13,7 @@ struct
 
   type 'a t = {
     tbl : (int * 'a) H.t;
-    lst : K.t Dllist.t;
+    lst : K.t Dllist.l;
     cap : int;
     stats : Stats.t;
   }
@@ -21,7 +21,7 @@ struct
   let unsafe_v c =
     {
       tbl = H.create c;
-      lst = Dllist.create c dummy;
+      lst = Dllist.create c dummy |> Dllist.create_list;
       cap = c;
       stats = Stats.v ();
     }
