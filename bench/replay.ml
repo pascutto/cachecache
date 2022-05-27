@@ -71,5 +71,20 @@ module Lfu = Cachecache.Lfu.Make (K)
 module Bench_lru = Make (Lru)
 module Bench_lfu = Make (Lfu)
 
-let () = Bench_lru.bench 5000
-let () = Bench_lfu.bench 5000
+let main algo cap =
+  match algo with `Lru -> Bench_lru.bench cap | `Lfu -> Bench_lfu.bench cap
+
+open Cmdliner
+
+let algo =
+  let l = [ ("lru", `Lru); ("lfu", `Lfu) ] in
+  let i = Arg.info [] in
+  Arg.(required @@ pos 0 (some (enum l)) None i)
+
+let cap =
+  let i = Arg.info [] in
+  Arg.(required @@ pos 1 (some int) None i)
+
+let main_t = Term.(const main $ algo $ cap)
+let cmd = Cmd.v (Cmd.info "replay") main_t
+let () = exit (Cmd.eval cmd)
