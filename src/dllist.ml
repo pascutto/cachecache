@@ -16,6 +16,15 @@ type 'a l = {
 
 type 'a c = int
 
+let status ppf l =
+  Fmt.pf ppf "first : %d@\n" l.first;
+  Fmt.pf ppf "last  : %d@\n" l.last;
+  Fmt.(pf ppf "free  : %a@\n" int) l.t.free;
+  Fmt.(pf ppf "prev  : %a@\n" (array ~sep:sp int)) l.t.prev;
+  Fmt.(pf ppf "next  : %a@\n@\n" (array ~sep:sp int)) l.t.next
+
+let is_full l = l.t.free == -1
+
 let create cap witness =
   {
     cap;

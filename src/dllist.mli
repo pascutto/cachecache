@@ -30,3 +30,5 @@ val append_before : 'a l -> 'a c -> 'a -> 'a c
 val append_after : 'a l -> 'a c -> 'a -> 'a c
 val next : 'a l -> 'a c -> 'a c
 val ends : 'a l -> 'a c * 'a c
+val status : Format.formatter -> 'a l -> unit
+val is_full : 'a l -> bool
