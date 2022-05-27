@@ -15,20 +15,19 @@ let () =
   let _, { instance_count }, seq =
     open_reader "/home/cha//Downloads/lru.trace"
   in
-  ignore instance_count;
-  let lru = Lru.v 5000 in
-  (*instane lru*)
+  let lrus = List.init instance_count (fun _ -> Lru.v 5000) in
   Seq.iter
     (fun { instance_id; op } ->
-      match (instance_id, op) with
-      | 1, Add k ->
+      let lru = List.nth lrus instance_id in
+      match op with
+      | Add k ->
           Lru.replace lru k ();
           stats.add <- stats.add + 1
-      | 1, Find k ->
-          ignore (Lru.find_opt lru k);
+      | Find k ->
+          ignore (Lru.find_opt lru k : _ option);
           stats.find <- stats.find + 1
-      | 1, Mem k ->
-          ignore (Lru.mem lru k);
+      | Mem k ->
+          ignore (Lru.mem lru k : bool);
           stats.mem <- stats.mem + 1
       | _ -> ())
     seq;
