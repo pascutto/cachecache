@@ -12,7 +12,7 @@
  (preprocess
   (pps ppx_repr))
  (name replay)
- (libraries cachecache fmt ppx_repr repr))
+ (libraries cachecache fmt ppx_repr repr mtime mtime.clock.os))
 
 (alias
  (name runtest)
