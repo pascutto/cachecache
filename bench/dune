@@ -1,6 +1,18 @@
 (executable
+ (modules main)
  (name main)
  (libraries bechamel bechamel-notty notty.unix lru cachecache))
+
+(executable
+ (modules
+  lru_trace_definition
+  replay
+  trace_auto_file_format_intf
+  trace_auto_file_format)
+ (preprocess
+  (pps ppx_repr))
+ (name replay)
+ (libraries cachecache fmt ppx_repr repr))
 
 (alias
  (name runtest)
