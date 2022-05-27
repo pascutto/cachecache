@@ -41,35 +41,32 @@ struct
     Stats.clear t.stats
 
   let update t k =
-    Fmt.pr "u@.";
-    Fmt.epr "FREQ @[%a@]@." Dllist.status t.frequency;
     let freq_index, key_index, _value = H.find t.value k in
     let freq, freq_list = Dllist.get t.frequency freq_index in
     let next = Dllist.next t.frequency freq_index in
     let freq_next, _freq_next_list = Dllist.get t.frequency next in
     let new_freq_index =
-      if freq + 1 <> freq_next then
-        let real_next_freq_list = Dllist.create_list t.lsts in
-        let real_freq = freq + 1 in
-        Dllist.append_after t.frequency freq_index
-          (real_freq, real_next_freq_list)
-      else next
+      if freq_next = freq + 1 then next
+      else
+        let new_next = Dllist.create_list t.lsts in
+        (* FIXME: t.frequency could be full at this point, and append_after would fail *)
+        Dllist.append_after t.frequency freq_index (freq + 1, new_next)
     in
-    Fmt.epr "HELLO0@.";
-    Fmt.epr "FREQ @[%a@]@." Dllist.status t.frequency;
     Dllist.remove freq_list key_index;
-    Fmt.epr "HELLO1@.";
     let _freq_next, freq_next_list = Dllist.get t.frequency new_freq_index in
-    if Dllist.is_empty freq_list then Dllist.remove t.frequency freq_index;
+    if Dllist.is_empty freq_list then
+      (* FIXME: this should happen before, to leave room for the new value if
+         t.frequency is full *)
+      Dllist.remove t.frequency freq_index;
     let new_key_index, _opt = Dllist.append freq_next_list k in
+    assert (_opt = None);
     (new_freq_index, new_key_index)
 
   let find t k =
-    Fmt.pr "-@.";
     let _freq_index, _key_index, v = H.find t.value k in
     Stats.hit t.stats;
-    let new_freq_index, new_last_index = update t k in
-    H.replace t.value k (new_freq_index, new_last_index, v);
+    let new_freq_index, new_key_index = update t k in
+    H.replace t.value k (new_freq_index, new_key_index, v);
     v
 
   let find_opt t k =
@@ -79,7 +76,6 @@ struct
       None
 
   let mem t k =
-    Fmt.pr "m@.";
     try
       ignore (find t k);
       true
@@ -88,30 +84,31 @@ struct
       false
 
   let add t k v =
-    Fmt.pr "a@.";
-    if H.length t.value = 0 then
+    if H.length t.value = 0 then (
       let first_freq_list = Dllist.create_list t.lsts in
       let new_key_index, _opt = Dllist.append first_freq_list k in
+      assert (_opt = None);
       let first_key_index, _opt =
         Dllist.append t.frequency (1, first_freq_list)
       in
-      H.replace t.value k (first_key_index, new_key_index, v)
+      assert (_opt = None);
+      H.replace t.value k (first_key_index, new_key_index, v))
     else
       let first_freq_index, _last_freq_index = Dllist.ends t.frequency in
       let freq, _key_list = Dllist.get t.frequency first_freq_index in
       let new_first_freq_index =
-        if freq <> 1 then
+        if freq = 1 then first_freq_index
+        else
           let real_first_freq_list = Dllist.create_list t.lsts in
           Dllist.append_before t.frequency first_freq_index
             (1, real_first_freq_list)
-        else first_freq_index
       in
       let _freq, freq_list = Dllist.get t.frequency new_first_freq_index in
       let new_index, _opt = Dllist.append freq_list k in
+      assert (_opt = None);
       H.replace t.value k (new_first_freq_index, new_index, v)
 
   let replace t k v =
-    Fmt.pr "R@.";
     try
       let _freq_index, _key_index, _value = H.find t.value k in
       let new_freq_index, new_key_index = update t k in
@@ -120,8 +117,7 @@ struct
     with Not_found ->
       Stats.add (H.length t.value + 1) t.stats;
       if H.length t.value < t.cap then add t k v
-      else (
-        Fmt.pr "d@.";
+      else
         let first_freq_index, _last_freq_index = Dllist.ends t.frequency in
         let _freq, freq_list = Dllist.get t.frequency first_freq_index in
         let first_index, _last_index = Dllist.ends freq_list in
@@ -131,15 +127,15 @@ struct
           Dllist.remove t.frequency first_freq_index;
         H.remove t.value remove_key;
         Stats.discard t.stats;
-        add t k v)
+        add t k v
 
   let remove t k =
-    Fmt.pr "r@.";
     try
       let freq_index, key_index, _value = H.find t.value k in
       H.remove t.value k;
       let _freq, key_list = Dllist.get t.frequency freq_index in
       Dllist.remove key_list key_index;
+      if Dllist.is_empty key_list then Dllist.remove t.frequency freq_index;
       Stats.remove t.stats
     with Not_found -> ()
 end

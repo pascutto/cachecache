@@ -30,7 +30,6 @@ depends: [
   "dune" {>= "2.0"}
   "ocaml" {>= "4.07.1"}
   "fmt"
-  "vector"
   "alcotest" {with-test}
   "gospel" {with-test}
   "fpath" {with-test}

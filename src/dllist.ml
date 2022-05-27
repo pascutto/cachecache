@@ -16,13 +16,6 @@ type 'a l = {
 
 type 'a c = int
 
-let status ppf l =
-  Fmt.pf ppf "first : %d@\n" l.first;
-  Fmt.pf ppf "last  : %d@\n" l.last;
-  Fmt.(pf ppf "free  : %a@\n" int) l.t.free;
-  Fmt.(pf ppf "prev  : %a@\n" (array ~sep:sp int)) l.t.prev;
-  Fmt.(pf ppf "next  : %a@\n@\n" (array ~sep:sp int)) l.t.next
-
 let create cap witness =
   {
     cap;
@@ -80,14 +73,13 @@ let append l v =
       l.t.next.(index) <- -1;
       removed
   in
-  assert (l.first <> -1);
-  (l.first, removed)
+  (l.last, removed)
 
 let promote l i =
   if i <> l.last then (
     l.t.prev.(l.t.next.(i)) <- l.t.prev.(i);
-    if i <> l.first then l.t.next.(l.t.prev.(i)) <- l.t.next.(i)
-    else l.first <- l.t.next.(i);
+    if i = l.first then l.first <- l.t.next.(i)
+    else l.t.next.(l.t.prev.(i)) <- l.t.next.(i);
     l.t.next.(l.last) <- i;
     l.t.prev.(i) <- l.last;
     l.t.next.(i) <- -1;
@@ -95,12 +87,10 @@ let promote l i =
   l.last
 
 let remove l i =
-  Fmt.epr "%a@." status l;
-  Fmt.epr "%d@." i;
-  if i <> l.first then l.t.next.(l.t.prev.(i)) <- l.t.next.(i)
-  else l.first <- l.t.next.(l.first);
-  if i <> l.last then l.t.prev.(l.t.next.(i)) <- l.t.prev.(i)
-  else l.last <- l.t.prev.(l.last);
+  if i = l.first then l.first <- l.t.next.(l.first)
+  else l.t.next.(l.t.prev.(i)) <- l.t.next.(i);
+  if i = l.last then l.last <- l.t.prev.(l.last)
+  else l.t.prev.(l.t.next.(i)) <- l.t.prev.(i);
   if l.t.free <> -1 then l.t.prev.(l.t.free) <- i;
   l.t.next.(i) <- l.t.free;
   l.t.prev.(i) <- -1;
@@ -114,7 +104,6 @@ let is_empty l = l.size = 0
 
 let append_before l i v =
   let new_index = l.t.free in
-  assert (new_index <> -1);
   l.t.free <- l.t.next.(l.t.free);
   if l.t.free <> -1 then l.t.prev.(l.t.free) <- -1;
   if l.first = i then l.first <- new_index
@@ -124,7 +113,6 @@ let append_before l i v =
   l.t.prev.(i) <- new_index;
   l.t.contents.(new_index) <- v;
   l.size <- l.size + 1;
-  assert (l.first <> -1);
   new_index
 
 let append_after l i v =
@@ -139,5 +127,4 @@ let append_after l i v =
   l.t.next.(i) <- new_index;
   l.t.contents.(new_index) <- v;
   l.size <- l.size + 1;
-  assert (l.first <> -1);
   new_index
