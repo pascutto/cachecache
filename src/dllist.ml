@@ -1,8 +1,8 @@
 type 'a t = {
   cap : int;
   witness : 'a;
-  contents : 'a array;
   mutable free : int;
+  contents : 'a array;
   prev : int array;
   next : int array;
 }
@@ -16,46 +16,37 @@ type 'a l = {
 
 type 'a c = int
 
-let status ppf l =
-  Fmt.pf ppf "first : %d@\n" l.first;
-  Fmt.pf ppf "last  : %d@\n" l.last;
-  Fmt.(pf ppf "free  : %a@\n" int) l.t.free;
-  Fmt.(pf ppf "prev  : %a@\n" (array ~sep:sp int)) l.t.prev;
-  Fmt.(pf ppf "next  : %a@\n@\n" (array ~sep:sp int)) l.t.next
-
-let is_full l = l.t.free == -1
-
 let create cap witness =
   {
     cap;
     witness;
-    contents = Array.make cap witness;
     free = 0;
+    contents = Array.make cap witness;
     prev = Array.init cap pred;
     next = Array.init cap (fun i -> if i = cap - 1 then -1 else succ i);
   }
 
 let create_list t = { first = -1; last = -1; size = 0; t }
+let length l = l.size
+let is_empty l = l.size = 0
+let is_full l = l.t.free == -1
+let get l i = l.t.contents.(i)
+let ends l = (l.first, l.last)
 
 let next l i =
   let n = l.t.next.(i) in
   if n = -1 then i else n
 
-let ends l = (l.first, l.last)
-
-let clear l =
-  let rec aux i =
-    if i = -1 then ()
-    else (
-      l.t.contents.(i) <- l.t.witness;
-      l.t.prev.(i) <- -1;
-      l.t.next.(i) <- -1;
-      aux l.t.next.(i))
-  in
-  aux l.first;
-  l.first <- -1;
-  l.last <- -1;
-  l.size <- 0
+let promote l i =
+  if i <> l.last then (
+    l.t.prev.(l.t.next.(i)) <- l.t.prev.(i);
+    if i = l.first then l.first <- l.t.next.(i)
+    else l.t.next.(l.t.prev.(i)) <- l.t.next.(i);
+    l.t.next.(l.last) <- i;
+    l.t.prev.(i) <- l.last;
+    l.t.next.(i) <- -1;
+    l.last <- i);
+  l.last
 
 let append l v =
   let removed =
@@ -84,33 +75,6 @@ let append l v =
   in
   (l.last, removed)
 
-let promote l i =
-  if i <> l.last then (
-    l.t.prev.(l.t.next.(i)) <- l.t.prev.(i);
-    if i = l.first then l.first <- l.t.next.(i)
-    else l.t.next.(l.t.prev.(i)) <- l.t.next.(i);
-    l.t.next.(l.last) <- i;
-    l.t.prev.(i) <- l.last;
-    l.t.next.(i) <- -1;
-    l.last <- i);
-  l.last
-
-let remove l i =
-  if i = l.first then l.first <- l.t.next.(l.first)
-  else l.t.next.(l.t.prev.(i)) <- l.t.next.(i);
-  if i = l.last then l.last <- l.t.prev.(l.last)
-  else l.t.prev.(l.t.next.(i)) <- l.t.prev.(i);
-  if l.t.free <> -1 then l.t.prev.(l.t.free) <- i;
-  l.t.next.(i) <- l.t.free;
-  l.t.prev.(i) <- -1;
-  l.t.free <- i;
-  l.size <- l.size - 1;
-  l.t.contents.(i) <- l.t.witness
-
-let get l i = l.t.contents.(i)
-let length l = l.size
-let is_empty l = l.size = 0
-
 let append_before l i v =
   let new_index = l.t.free in
   l.t.free <- l.t.next.(l.t.free);
@@ -137,3 +101,29 @@ let append_after l i v =
   l.t.contents.(new_index) <- v;
   l.size <- l.size + 1;
   new_index
+
+let remove l i =
+  if i = l.first then l.first <- l.t.next.(l.first)
+  else l.t.next.(l.t.prev.(i)) <- l.t.next.(i);
+  if i = l.last then l.last <- l.t.prev.(l.last)
+  else l.t.prev.(l.t.next.(i)) <- l.t.prev.(i);
+  if l.t.free <> -1 then l.t.prev.(l.t.free) <- i;
+  l.t.next.(i) <- l.t.free;
+  l.t.prev.(i) <- -1;
+  l.t.free <- i;
+  l.size <- l.size - 1;
+  l.t.contents.(i) <- l.t.witness
+
+let clear l =
+  let rec aux i =
+    if i = -1 then ()
+    else (
+      l.t.contents.(i) <- l.t.witness;
+      l.t.prev.(i) <- -1;
+      l.t.next.(i) <- -1;
+      aux l.t.next.(i))
+  in
+  aux l.first;
+  l.first <- -1;
+  l.last <- -1;
+  l.size <- 0
