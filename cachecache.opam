@@ -32,7 +32,7 @@ depends: [
   "fmt"
   "ppx_repr"
   "cmdliner"
-  "mtime.clock.os"
+  "mtime"
   "alcotest" {with-test}
   "gospel" {with-test}
   "fpath" {with-test}

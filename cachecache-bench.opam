@@ -12,7 +12,7 @@ depends: [
   "ocaml" {>= "4.07.1"}
   "ppx_repr"
   "cmdliner"
-  "mtime.clock.os"
+  "mtime"
   "bechamel" {with-test}
   "bechamel-notty" {with-test}
   "notty" {with-test}
