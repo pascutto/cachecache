@@ -11,6 +11,7 @@ depends: [
   "dune" {>= "2.0"}
   "ocaml" {>= "4.07.1"}
   "ppx_repr"
+  "cmdliner"
   "mtime.clock.os"
   "bechamel" {with-test}
   "bechamel-notty" {with-test}
