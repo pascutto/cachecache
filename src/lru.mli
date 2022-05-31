@@ -7,10 +7,12 @@ module Make (K : sig
   val hash : t -> int
 end) : sig
   type 'a t
+  type key = K.t
+
   (*@ ephemeral
       model cap : int
-      mutable model assoc : K.t -> 'a option
-      mutable model age : K.t -> int
+      mutable model assoc : key -> 'a option
+      mutable model age : key -> int
       invariant cap > 0
       invariant forall k k'.
         not (K.equal k k') ->
@@ -39,21 +41,20 @@ end) : sig
   (*@ clear t
       ensures forall k. t.assoc k = None *)
 
-  val mem : 'a t -> K.t -> bool
-  (*@ b = mem t k
-      ensures b = true <-> t.assoc k <> None *)
-
-  val find : 'a t -> K.t -> 'a
+  val find : 'a t -> key -> 'a
   (*@ v = find t k
       ensures t.assoc k = Some v
       raises Not_found -> t.assoc k = None *)
 
-  val promote : 'a t -> K.t -> unit
-  val find_opt : 'a t -> K.t -> 'a option
+  val find_opt : 'a t -> key -> 'a option
+
   (*@ o = find_opt t k
       ensures o = t.assoc k *)
+  val mem : 'a t -> key -> bool
+  (*@ b = mem t k
+      ensures b = true <-> t.assoc k <> None *)
 
-  val replace : 'a t -> K.t -> 'a -> unit
+  val replace : 'a t -> key -> 'a -> unit
   (*@ replace t k v
       modifies t
       ensures t.assoc k = Some v
@@ -65,7 +66,7 @@ end) : sig
           else if old t.age k' < old t.age k then old t.age k' + 1
           else old t.age k' *)
 
-  val remove : 'a t -> K.t -> unit
+  val remove : 'a t -> key -> unit
   (*@ remove t k
       modifies t
       ensures t.assoc k = None *)

@@ -7,11 +7,13 @@ end) =
 struct
   module H = Hashtbl.Make (K)
 
+  type key = K.t
+
   let dummy : K.t = Obj.magic (ref 0)
 
   type 'a t = {
-    tbl : (int * 'a) H.t;
-    lst : K.t Dllist.t;
+    tbl : (K.t Dllist.c * 'a) H.t;
+    lst : K.t Dllist.l;
     cap : int;
     stats : Stats.t;
   }
@@ -19,7 +21,7 @@ struct
   let unsafe_v c =
     {
       tbl = H.create c;
-      lst = Dllist.create c dummy;
+      lst = Dllist.create c dummy |> Dllist.create_list;
       cap = c;
       stats = Stats.v ();
     }
@@ -38,13 +40,9 @@ struct
     Dllist.clear t.lst;
     Stats.clear t.stats
 
-  let mem t k =
-    let b = H.mem t.tbl k in
-    if b then Stats.hit t.stats else Stats.miss t.stats;
-    b
-
   let find t k =
     let index, value = H.find t.tbl k in
+    Stats.hit t.stats;
     let new_index = Dllist.promote t.lst index in
     H.replace t.tbl k (new_index, value);
     value
@@ -52,13 +50,15 @@ struct
   let find_opt t k =
     try
       let result = find t k in
-      Stats.hit t.stats;
       Some result
     with Not_found ->
       Stats.miss t.stats;
       None
 
-  let promote t k = ignore (find t k)
+  let mem t k =
+    let b = H.mem t.tbl k in
+    if b then Stats.hit t.stats else Stats.miss t.stats;
+    b
 
   let replace t k v =
     try
@@ -69,7 +69,7 @@ struct
     with Not_found ->
       let index, removed = Dllist.append t.lst k in
       (match removed with
-      | None -> Stats.add (H.length t.tbl + 1) t.stats
+      | None -> ()
       | Some key ->
           H.remove t.tbl key;
           Stats.discard t.stats);
