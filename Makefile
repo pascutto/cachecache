@@ -1,3 +1,3 @@
 .PHONY: bench
 bench:
-	dune exec bench/replay.exe 5001
+	dune exec bench/replay.exe lru 5001

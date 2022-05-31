@@ -86,27 +86,32 @@ module Make (Cache : Cachecache.S.Cache with type key = K.t) = struct
       seq;
     (* Fmt.pr "%a\n" pp_stats stats *)
     pr_bench "add" "add_metric" (Mtime.Span.to_ms stats.add_span);
-
     pr_bench "mem" "mem_metric" (Mtime.Span.to_ms stats.mem_span);
-
     pr_bench "find" "find_metric" (Mtime.Span.to_ms stats.find_span);
     pr_bench "total_runtime" "total_runtime_metric"
       (Mtime.Span.to_ms stats.total_runtime_span)
 end
 
+include Cachecache.Lru.Make (K)
 module Lru = Cachecache.Lru.Make (K)
 module Lfu = Cachecache.Lfu.Make (K)
 module Bench_lru = Make (Lru)
 module Bench_lfu = Make (Lfu)
 
-let main cap = Bench_lru.bench cap
+let main algo cap =
+  match algo with `Lru -> Bench_lru.bench cap | `Lfu -> Bench_lfu.bench cap
 
 open Cmdliner
 
+let algo =
+  let l = [ ("lru", `Lru); ("lfu", `Lfu) ] in
+  let i = Arg.info [] in
+  Arg.(required @@ pos 0 (some (enum l)) None i)
+
 let cap =
   let i = Arg.info [] in
-  Arg.(required @@ pos 0 (some int) None i)
+  Arg.(required @@ pos 1 (some int) None i)
 
-let main_t = Term.(const main $ cap)
+let main_t = Term.(const main $ algo $ cap)
 let cmd = Cmd.v (Cmd.info "replay") main_t
 let () = exit (Cmd.eval cmd)
