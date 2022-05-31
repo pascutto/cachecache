@@ -84,7 +84,7 @@ module Make (Cache : Cachecache.S.Cache with type key = K.t) = struct
             stats.mem <- stats.mem + 1
         | _ -> assert false)
       seq;
-    (* Fmt.pr "%a\n" pp_stats stats *)
+    (* Fmt.prs "%a\n" pp_stats stats *)
     pr_bench "add" "add_metric" (Mtime.Span.to_ms stats.add_span);
     pr_bench "mem" "mem_metric" (Mtime.Span.to_ms stats.mem_span);
     pr_bench "find" "find_metric" (Mtime.Span.to_ms stats.find_span);
