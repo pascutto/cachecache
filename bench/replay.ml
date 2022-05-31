@@ -44,7 +44,7 @@ module Make (Cache : Cachecache.S.Cache with type key = K.t) = struct
       }
     in
     let open Lru_trace_definition in
-    let _, { instance_count }, seq = open_reader "./trace/lru.trace" in
+    let _, { instance_count }, seq = open_reader "./lru.trace" in
     let caches = List.init instance_count (fun _ -> Cache.v cap) in
     let counter = Mtime_clock.counter () in
     Seq.iter
