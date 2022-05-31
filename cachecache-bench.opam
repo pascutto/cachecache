@@ -10,10 +10,12 @@ bug-reports: "https://github.com/pascutto/cachecache/issues"
 depends: [
   "dune" {>= "2.0"}
   "ocaml" {>= "4.07.1"}
+  "ppx_repr"
+  "mtime.clock.os"
   "bechamel" {with-test}
   "bechamel-notty" {with-test}
   "notty" {with-test}
-  "lru" {with-test}
+  "lru" 
 ]
 build: [
   ["dune" "subst"] {pinned}

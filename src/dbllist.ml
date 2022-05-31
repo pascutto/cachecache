@@ -53,7 +53,8 @@ let append_after l c v =
         new_cell
 
 let clear l = l := Nil
-let get l = match !l with Nil -> assert false | List l -> (l.first, l.last)
+let ends l = match !l with Nil -> assert false | List l -> (l.first, l.last)
+let get c = c.content
 
 let remove t c =
   match !t with

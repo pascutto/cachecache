@@ -12,5 +12,6 @@ val append : 'a t -> 'a -> 'a cell
 val append_before : 'a t -> 'a cell -> 'a -> 'a cell
 val append_after : 'a t -> 'a cell -> 'a -> 'a cell
 val clear : 'a t -> unit
-val get : 'a t -> 'a cell * 'a cell
+val ends : 'a t -> 'a cell * 'a cell
 val remove : 'a t -> 'a cell -> unit
+val get : 'a cell -> 'a

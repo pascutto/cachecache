@@ -88,8 +88,8 @@ struct
     | h :: tl ->
         List.iter
           (fun k ->
-            Alcotest.(check bool)
-              "[Direct] Added values are still present" true (Cache.mem t k))
+            Alcotest.(check key)
+              "[Direct] Added values are still present" k (Cache.find t k))
           tl;
         let k = K.v () in
         Cache.replace t k k;
