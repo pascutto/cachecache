@@ -27,6 +27,7 @@ end) : sig
       ensures t.cap = c
       ensures forall k. t.assoc k = None *)
 
+  val name : unit -> string
   val stats : 'a t -> Stats.t
   val is_empty : 'a t -> bool
   (*@ b = is_empty t

@@ -3,6 +3,7 @@ module type Cache = sig
   type key
 
   val v : int -> 'a t
+  val name : unit -> string
   val stats : 'a t -> Stats.t
   val is_empty : 'a t -> bool
   val capacity : 'a t -> int
