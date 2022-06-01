@@ -51,7 +51,9 @@ module Make (Cache : Cachecache.S.Cache with type key = K.t) = struct
         match op with
         | Add k ->
             let before = Mtime_clock.count counter in
-            Cache.replace cache k ();
+            for _ = 0 to 10 do
+              Cache.replace cache k ()
+            done;
             let after = Mtime_clock.count counter in
             stats.total_runtime_span <-
               Mtime.Span.(abs_diff after before |> add stats.total_runtime_span);
@@ -60,7 +62,9 @@ module Make (Cache : Cachecache.S.Cache with type key = K.t) = struct
             stats.add <- stats.add + 1
         | Find k ->
             let before = Mtime_clock.count counter in
-            ignore (Cache.find_opt cache k : _ option);
+            for _ = 0 to 10 do
+              ignore (Cache.find_opt cache k : _ option)
+            done;
             let after = Mtime_clock.count counter in
             stats.total_runtime_span <-
               Mtime.Span.(abs_diff after before |> add stats.total_runtime_span);
@@ -69,14 +73,17 @@ module Make (Cache : Cachecache.S.Cache with type key = K.t) = struct
             stats.find <- stats.find + 1
         | Mem k ->
             let before = Mtime_clock.count counter in
-            let b = Cache.mem cache k in
+            for _ = 0 to 10 do
+              let b = Cache.mem cache k in
+              if b then stats.hit <- stats.hit + 1
+              else stats.miss <- stats.miss + 1
+            done;
             let after = Mtime_clock.count counter in
             stats.total_runtime_span <-
               Mtime.Span.(abs_diff after before |> add stats.total_runtime_span);
             stats.mem_span <-
               Mtime.Span.(abs_diff after before |> add stats.mem_span);
-            if b then stats.hit <- stats.hit + 1
-            else stats.miss <- stats.miss + 1;
+
             stats.mem <- stats.mem + 1
         | _ -> assert false)
       seq;
