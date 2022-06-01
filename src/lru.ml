@@ -30,7 +30,6 @@ struct
     if c <= 0 then invalid_arg "capacity must be strictly positive";
     unsafe_v c
 
-  let name () = "lru"
   let stats t = t.stats
   let is_empty t = Dllist.length t.lst = 0
   let capacity t = t.cap
