@@ -8,7 +8,6 @@ type stats = {
   mutable find : int;
   mutable hit : int;
   mutable miss : int;
-  (* mutable discard : int; *)
   mutable add_span : span;
   mutable mem_span : span;
   mutable find_span : span;
@@ -36,7 +35,6 @@ module Make (Cache : Cachecache.S.Cache with type key = K.t) = struct
         find = 0;
         hit = 0;
         miss = 0;
-        (* discard = 0; *)
         add_span = Mtime.Span.zero;
         mem_span = Mtime.Span.zero;
         find_span = Mtime.Span.zero;
@@ -82,7 +80,6 @@ module Make (Cache : Cachecache.S.Cache with type key = K.t) = struct
             stats.mem <- stats.mem + 1
         | _ -> assert false)
       seq;
-    (* Fmt.prs "%a\n" pp_stats stats *)
     pr_bench "add" "add_metric" (Mtime.Span.to_ms stats.add_span);
     pr_bench "mem" "mem_metric" (Mtime.Span.to_ms stats.mem_span);
     pr_bench "find" "find_metric" (Mtime.Span.to_ms stats.find_span);
