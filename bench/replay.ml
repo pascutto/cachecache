@@ -81,16 +81,16 @@ module Make (Cache : Cachecache.S.Cache with type key = K.t) = struct
         | _ -> assert false)
       seq;
     pr_bench "add"
-      (Cache.name () ^ "add_metric")
+      (Cache.name () ^ "-add_metric")
       (Mtime.Span.to_ms stats.add_span);
     pr_bench "mem"
-      (Cache.name () ^ "mem_metric")
+      (Cache.name () ^ "-mem_metric")
       (Mtime.Span.to_ms stats.mem_span);
     pr_bench "find"
-      (Cache.name () ^ "find_metric")
+      (Cache.name () ^ "-find_metric")
       (Mtime.Span.to_ms stats.find_span);
     pr_bench "total_runtime"
-      (Cache.name () ^ "total_runtime_metric")
+      (Cache.name () ^ "-total_runtime_metric")
       (Mtime.Span.to_ms stats.total_runtime_span)
 end
 
