@@ -81,6 +81,7 @@ module Make (Cache : Cachecache.S.Cache with type key = K.t) = struct
       seq;
     pr_bench name (metrics "add" stats.add_span);
     pr_bench name (metrics "find" stats.find_span);
+
     pr_bench name (metrics "total_runtime" stats.total_runtime_span);
     stats
 end
