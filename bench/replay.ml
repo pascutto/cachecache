@@ -39,7 +39,7 @@ let mtime s counter (f : unit -> unit) =
   t
 
 module Make (Cache : Cachecache.S.Cache with type key = K.t) = struct
-  let bench name cap =
+  let bench cap =
     let stats =
       {
         add = 0;
@@ -97,8 +97,8 @@ let () =
   for _ = 0 to 1 do
     for i = 0 to Array.length t - 2 do
       Fmt.pr "cap = %d\n" t.(i);
-      let lru_stats = Bench_lru.bench "lru" t.(i) in
-      let lfu_stats = Bench_lfu.bench "lfu" t.(i) in
+      let lru_stats = Bench_lru.bench t.(i) in
+      let lfu_stats = Bench_lfu.bench t.(i) in
       pr_bench "add"
         (metrics "add/lru" lru_stats.add_span
         ^ ","
