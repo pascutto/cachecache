@@ -21,21 +21,13 @@ module K = struct
   let hash = Hashtbl.hash
 end
 
-let pr_bench test_name metric_name value =
-  Format.printf
-    {|{"results": [{"name": "%s", "metrics": [{"name": "%s", "value": %f, "units": "ms"}]}]}@.|}
-    test_name metric_name value
+let pr_bench test_name metrics =
+  Format.printf {|{"results": [{"name": "%s", "metrics": [%s]}]}@.|} test_name
+    metrics
 
-let multi_curves test_name lru_value lfu_value =
-  Format.printf
-    {|{"results": [{"name": "%s", "metrics": [{"name": "%s/lru", "value": %f, "units": "ms"}, {"name": "%s/lfu", "value": %f, "units": "ms"}]}]}@.|}
-    test_name test_name lru_value test_name lfu_value
-(*let metrics test_name metric_name value =
-    Printf.sprintf
-      {|[{"name": "%s", "metrics": [{"name": "%s", "value": %f, "units": "ms"}]}]@.|}
-      test_name metric_name value
-
-  let pr_bench m = Format.printf {|{"results": %s}@.|} m*)
+let metrics metric_name value =
+  Printf.sprintf {|{"name": "%s", "value": %f, "units": "ms"}@.|} metric_name
+    value
 
 let mtime s counter (f : unit -> unit) =
   let t = Mtime_clock.count counter in
@@ -87,10 +79,9 @@ module Make (Cache : Cachecache.S.Cache with type key = K.t) = struct
             stats.mem <- stats.mem + 1
         | _ -> assert false)
       seq;
-    (* pr_bench name "add" stats.add_span; *)
-    (* pr_bench name "mem" stats.mem_span; *)
-    (* pr_bench name "find" stats.find_span; *)
-    pr_bench name "___" stats.total_runtime_span;
+    pr_bench name (metrics "add" stats.add_span);
+    pr_bench name (metrics "find" stats.find_span);
+    pr_bench name (metrics "total_runtime" stats.total_runtime_span);
     stats
 end
 
@@ -100,34 +91,24 @@ module Lfu = Cachecache.Lfu.Make (K)
 module Bench_lru = Make (Lru)
 module Bench_lfu = Make (Lfu)
 
-(* let main algo cap =
-     match algo with `Lru -> Bench_lru.bench cap | `Lfu -> Bench_lfu.bench cap
-
-   open Cmdliner
-
-   let algo = *)
-(* let l = [ ("lru", `Lru); ("lfu", `Lfu) ] in *)
-(* let i = Arg.info [] in
-   Arg.(required @@ pos 0 (some (enum l)) None i) *)
-
-(* let cap =
-   let i = Arg.info [] in
-   Arg.(required @@ pos 1 (some int) None i) *)
-
-(* let main_t = Term.(const main $ algo $ cap) *)
-(* let cmd = Cmd.v (Cmd.info "replay") main_t *)
-
 let () =
-  (* exit (Cmd.eval cmd) ; *)
   let t = [| 1000; 10000; 100000 |] in
-  for _ = 0 to 1 do
-    for i = 0 to Array.length t - 2 do
+  for _ = 0 to 10 do
+    for i = 0 to Array.length t - 1 do
       Fmt.pr "cap = %d\n" t.(i);
       let lru_stats = Bench_lru.bench "lru" t.(i) in
       let lfu_stats = Bench_lfu.bench "lfu" t.(i) in
-      multi_curves "add" lru_stats.add_span lfu_stats.add_span;
-      multi_curves "find" lru_stats.find_span lfu_stats.find_span;
-      multi_curves "total_runtime" lru_stats.total_runtime_span
-        lfu_stats.total_runtime_span
+      pr_bench "add"
+        (metrics "add" lru_stats.add_span
+        ^ ","
+        ^ metrics "add" lfu_stats.add_span);
+      pr_bench "find"
+        (metrics "find" lru_stats.find_span
+        ^ ","
+        ^ metrics "find" lfu_stats.find_span);
+      pr_bench "total_runtime"
+        (metrics "total_runtime" lru_stats.total_runtime_span
+        ^ ","
+        ^ metrics "total_runtime" lfu_stats.total_runtime_span)
     done
   done
