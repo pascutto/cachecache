@@ -94,8 +94,8 @@ module Bench_lfu = Make (Lfu)
 
 let () =
   let t = [| 1000; 10000; 100000 |] in
-  for _ = 0 to 1 do
-    for i = 0 to Array.length t - 2 do
+  for _ = 0 to 2 do
+    for i = 0 to Array.length t - 1 do
       Fmt.pr "cap = %d\n" t.(i);
       let lru_stats = Bench_lru.bench t.(i) in
       let lfu_stats = Bench_lfu.bench t.(i) in
@@ -113,13 +113,11 @@ let () =
         ^ metrics "total_runtime/lfu" lfu_stats.total_runtime_span);
       let str_cap = string_of_int t.(i) in
       pr_bench "lfu" (metrics ("add/" ^ str_cap) lfu_stats.add_span);
-      pr_bench "lru" (metrics ("add/" ^ str_cap) lru_stats.add_span);
-
       pr_bench "lfu" (metrics ("find/" ^ str_cap) lfu_stats.find_span);
-      pr_bench "lru" (metrics ("find/" ^ str_cap) lru_stats.find_span);
-
       pr_bench "lfu"
         (metrics ("total_runtime/" ^ str_cap) lfu_stats.total_runtime_span);
+      pr_bench "lru" (metrics ("add/" ^ str_cap) lru_stats.add_span);
+      pr_bench "lru" (metrics ("find/" ^ str_cap) lru_stats.find_span);
       pr_bench "lru"
         (metrics ("total_runtime/" ^ str_cap) lru_stats.total_runtime_span)
     done
