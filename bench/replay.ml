@@ -99,16 +99,16 @@ let () =
       let lru_stats = Bench_lru.bench "lru" t.(i) in
       let lfu_stats = Bench_lfu.bench "lfu" t.(i) in
       pr_bench "add"
-        (metrics "add" lru_stats.add_span
+        (metrics "add/lru" lru_stats.add_span
         ^ ","
-        ^ metrics "add" lfu_stats.add_span);
+        ^ metrics "add/lfu" lfu_stats.add_span);
       pr_bench "find"
-        (metrics "find" lru_stats.find_span
+        (metrics "find/lru" lru_stats.find_span
         ^ ","
-        ^ metrics "find" lfu_stats.find_span);
+        ^ metrics "find/lfu" lfu_stats.find_span);
       pr_bench "total_runtime"
-        (metrics "total_runtime" lru_stats.total_runtime_span
+        (metrics "total_runtime/lru" lru_stats.total_runtime_span
         ^ ","
-        ^ metrics "total_runtime" lfu_stats.total_runtime_span)
+        ^ metrics "total_runtime/lfu" lfu_stats.total_runtime_span)
     done
   done
