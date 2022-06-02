@@ -108,8 +108,8 @@ module Bench_lfu = Make (Lfu)
 let () =
   (* exit (Cmd.eval cmd) ; *)
   let t = [| 1000; 10000; 100000 |] in
-  for _ = 0 to 3 do
-    for cap = 0 to Array.length t do
+  for _ = 0 to 2 do
+    for cap = 0 to Array.length t - 1 do
       Bench_lru.bench "lru" t.(cap);
       Bench_lfu.bench "lfu" t.(cap)
     done
