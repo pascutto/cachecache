@@ -36,7 +36,7 @@ let mtime s counter (f : unit -> unit) =
   t
 
 module Make (Cache : Cachecache.S.Cache with type key = K.t) = struct
-  let bench cap =
+  let bench name cap =
     let stats =
       {
         add = 0;
@@ -76,10 +76,10 @@ module Make (Cache : Cachecache.S.Cache with type key = K.t) = struct
             stats.mem <- stats.mem + 1
         | _ -> assert false)
       seq;
-    pr_bench "add" "add_metric" stats.add_span;
-    pr_bench "mem" "mem_metric" stats.mem_span;
-    pr_bench "find" "find_metric" stats.find_span;
-    pr_bench "total_runtime" "total_runtime_metric" stats.total_runtime_span
+    pr_bench name "add" stats.add_span;
+    (* pr_bench name "mem" stats.mem_span; *)
+    pr_bench name "find" stats.find_span;
+    pr_bench name "total_runtime" stats.total_runtime_span
 end
 
 include Cachecache.Lru.Make (K)
@@ -88,20 +88,29 @@ module Lfu = Cachecache.Lfu.Make (K)
 module Bench_lru = Make (Lru)
 module Bench_lfu = Make (Lfu)
 
-let main algo cap =
-  match algo with `Lru -> Bench_lru.bench cap | `Lfu -> Bench_lfu.bench cap
+(* let main algo cap =
+     match algo with `Lru -> Bench_lru.bench cap | `Lfu -> Bench_lfu.bench cap
 
-open Cmdliner
+   open Cmdliner
 
-let algo =
-  let l = [ ("lru", `Lru); ("lfu", `Lfu) ] in
-  let i = Arg.info [] in
-  Arg.(required @@ pos 0 (some (enum l)) None i)
+   let algo = *)
+(* let l = [ ("lru", `Lru); ("lfu", `Lfu) ] in *)
+(* let i = Arg.info [] in
+   Arg.(required @@ pos 0 (some (enum l)) None i) *)
 
-let cap =
-  let i = Arg.info [] in
-  Arg.(required @@ pos 1 (some int) None i)
+(* let cap =
+   let i = Arg.info [] in
+   Arg.(required @@ pos 1 (some int) None i) *)
 
-let main_t = Term.(const main $ algo $ cap)
-let cmd = Cmd.v (Cmd.info "replay") main_t
-let () = exit (Cmd.eval cmd)
+(* let main_t = Term.(const main $ algo $ cap) *)
+(* let cmd = Cmd.v (Cmd.info "replay") main_t *)
+
+let () =
+  (* exit (Cmd.eval cmd) ; *)
+  let t = [| 1000; 10000; 100000 |] in
+  for _ = 0 to 3 do
+    for cap = 0 to Array.length t do
+      Bench_lru.bench "lru" t.(cap);
+      Bench_lfu.bench "lfu" t.(cap)
+    done
+  done
