@@ -26,7 +26,7 @@ let pr_bench test_name metrics =
     metrics
 
 let metrics metric_name value =
-  Printf.sprintf {|{"name": "%s", "value": %f, "units": "ms"}@.|} metric_name
+  Printf.sprintf {|{"name": "%s", "value": %f, "units": "ms"}|} metric_name
     value
 
 let mtime s counter (f : unit -> unit) =
@@ -93,8 +93,8 @@ module Bench_lfu = Make (Lfu)
 
 let () =
   let t = [| 1000; 10000; 100000 |] in
-  for _ = 0 to 10 do
-    for i = 0 to Array.length t - 1 do
+  for _ = 0 to 1 do
+    for i = 0 to Array.length t - 2 do
       Fmt.pr "cap = %d\n" t.(i);
       let lru_stats = Bench_lru.bench "lru" t.(i) in
       let lfu_stats = Bench_lfu.bench "lfu" t.(i) in
