@@ -26,6 +26,17 @@ let pr_bench test_name metric_name value =
     {|{"results": [{"name": "%s", "metrics": [{"name": "%s", "value": %f, "units": "ms"}]}]}@.|}
     test_name metric_name value
 
+let multi_curves test_name lru_value lfu_value =
+  Format.printf
+    {|{"results": [{"name": "%s", "metrics": [{"name": "%s/lru", "value": %f, "units": "ms"}, {"name": "%s/lfu", "value": %f, "units": "ms"}]}]}@.|}
+    test_name test_name lru_value test_name lfu_value
+(*let metrics test_name metric_name value =
+    Printf.sprintf
+      {|[{"name": "%s", "metrics": [{"name": "%s", "value": %f, "units": "ms"}]}]@.|}
+      test_name metric_name value
+
+  let pr_bench m = Format.printf {|{"results": %s}@.|} m*)
+
 let mtime s counter (f : unit -> unit) =
   let t = Mtime_clock.count counter in
   f ();
@@ -76,10 +87,11 @@ module Make (Cache : Cachecache.S.Cache with type key = K.t) = struct
             stats.mem <- stats.mem + 1
         | _ -> assert false)
       seq;
-    pr_bench name "add" stats.add_span;
+    (* pr_bench name "add" stats.add_span; *)
     (* pr_bench name "mem" stats.mem_span; *)
-    pr_bench name "find" stats.find_span;
-    pr_bench name "total_runtime" stats.total_runtime_span
+    (* pr_bench name "find" stats.find_span; *)
+    pr_bench name "___" stats.total_runtime_span;
+    stats
 end
 
 include Cachecache.Lru.Make (K)
@@ -111,7 +123,11 @@ let () =
   for _ = 0 to 1 do
     for i = 0 to Array.length t - 2 do
       Fmt.pr "cap = %d\n" t.(i);
-      Bench_lru.bench "lru" t.(i);
-      Bench_lfu.bench "lfu" t.(i)
+      let lru_stats = Bench_lru.bench "lru" t.(i) in
+      let lfu_stats = Bench_lfu.bench "lfu" t.(i) in
+      multi_curves "add" lru_stats.add_span lfu_stats.add_span;
+      multi_curves "find" lru_stats.find_span lfu_stats.find_span;
+      multi_curves "total_runtime" lru_stats.total_runtime_span
+        lfu_stats.total_runtime_span
     done
   done
