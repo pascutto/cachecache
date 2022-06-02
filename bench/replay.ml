@@ -110,6 +110,17 @@ let () =
       pr_bench "total_runtime"
         (metrics "total_runtime/lru" lru_stats.total_runtime_span
         ^ ","
-        ^ metrics "total_runtime/lfu" lfu_stats.total_runtime_span)
+        ^ metrics "total_runtime/lfu" lfu_stats.total_runtime_span);
+      let str_cap = string_of_int t.(i) in
+      pr_bench "lfu" (metrics ("add/" ^ str_cap) lfu_stats.add_span);
+      pr_bench "lru" (metrics ("add/" ^ str_cap) lru_stats.add_span);
+
+      pr_bench "lfu" (metrics ("find/" ^ str_cap) lfu_stats.find_span);
+      pr_bench "lru" (metrics ("find/" ^ str_cap) lru_stats.find_span);
+
+      pr_bench "lfu"
+        (metrics ("total_runtime/" ^ str_cap) lfu_stats.total_runtime_span);
+      pr_bench "lru"
+        (metrics ("total_runtime/" ^ str_cap) lru_stats.total_runtime_span)
     done
   done
