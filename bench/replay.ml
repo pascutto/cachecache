@@ -8,10 +8,10 @@ type stats = {
   mutable find : int;
   mutable hit : int;
   mutable miss : int;
-  mutable add_span : span;
-  mutable mem_span : span;
-  mutable find_span : span;
-  mutable total_runtime_span : span;
+  mutable add_span : float;
+  mutable mem_span : float;
+  mutable find_span : float;
+  mutable total_runtime_span : float;
 }
 [@@deriving repr ~pp]
 
@@ -26,6 +26,15 @@ let pr_bench test_name metric_name value =
     {|{"results": [{"name": "%s", "metrics": [{"name": "%s", "value": %f, "units": "ms"}]}]}@.|}
     test_name metric_name value
 
+let mtime s counter (f : unit -> unit) =
+  let t = Mtime_clock.count counter in
+  f ();
+  let t =
+    Mtime.Span.to_ms (Mtime.Span.abs_diff (Mtime_clock.count counter) t)
+  in
+  s.total_runtime_span <- s.total_runtime_span +. t;
+  t
+
 module Make (Cache : Cachecache.S.Cache with type key = K.t) = struct
   let bench cap =
     let stats =
@@ -35,10 +44,10 @@ module Make (Cache : Cachecache.S.Cache with type key = K.t) = struct
         find = 0;
         hit = 0;
         miss = 0;
-        add_span = Mtime.Span.zero;
-        mem_span = Mtime.Span.zero;
-        find_span = Mtime.Span.zero;
-        total_runtime_span = Mtime.Span.zero;
+        add_span = 0.;
+        mem_span = 0.;
+        find_span = 0.;
+        total_runtime_span = 0.;
       }
     in
     let open Lru_trace_definition in
@@ -50,41 +59,27 @@ module Make (Cache : Cachecache.S.Cache with type key = K.t) = struct
         let cache = List.nth caches instance_id in
         match op with
         | Add k ->
-            let before = Mtime_clock.count counter in
-            Cache.replace cache k ();
-            let after = Mtime_clock.count counter in
-            stats.total_runtime_span <-
-              Mtime.Span.(abs_diff after before |> add stats.total_runtime_span);
             stats.add_span <-
-              Mtime.Span.(abs_diff after before |> add stats.add_span);
+              stats.add_span +. mtime stats counter (Cache.replace cache k);
             stats.add <- stats.add + 1
         | Find k ->
-            let before = Mtime_clock.count counter in
-            ignore (Cache.find_opt cache k : _ option);
-            let after = Mtime_clock.count counter in
-            stats.total_runtime_span <-
-              Mtime.Span.(abs_diff after before |> add stats.total_runtime_span);
             stats.find_span <-
-              Mtime.Span.(abs_diff after before |> add stats.find_span);
+              stats.find_span
+              +. mtime stats counter (fun _ -> ignore (Cache.find_opt cache k));
             stats.find <- stats.find + 1
         | Mem k ->
-            let before = Mtime_clock.count counter in
             let b = Cache.mem cache k in
-            let after = Mtime_clock.count counter in
-            stats.total_runtime_span <-
-              Mtime.Span.(abs_diff after before |> add stats.total_runtime_span);
             stats.mem_span <-
-              Mtime.Span.(abs_diff after before |> add stats.mem_span);
+              stats.mem_span +. mtime stats counter (fun _ -> ignore b);
             if b then stats.hit <- stats.hit + 1
             else stats.miss <- stats.miss + 1;
             stats.mem <- stats.mem + 1
         | _ -> assert false)
       seq;
-    pr_bench "add" "add_metric" (Mtime.Span.to_ms stats.add_span);
-    pr_bench "mem" "mem_metric" (Mtime.Span.to_ms stats.mem_span);
-    pr_bench "find" "find_metric" (Mtime.Span.to_ms stats.find_span);
-    pr_bench "total_runtime" "total_runtime_metric"
-      (Mtime.Span.to_ms stats.total_runtime_span)
+    pr_bench "add" "add_metric" stats.add_span;
+    pr_bench "mem" "mem_metric" stats.mem_span;
+    pr_bench "find" "find_metric" stats.find_span;
+    pr_bench "total_runtime" "total_runtime_metric" stats.total_runtime_span
 end
 
 include Cachecache.Lru.Make (K)
