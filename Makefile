@@ -1,3 +1,5 @@
 .PHONY: bench
 bench:
-	dune exec bench/replay.exe lru 5001
+	sudo apt-get install wget
+	wget --directory-prefix=./trace http://data.tarides.com/irmin/lru.trace
+	dune exec bench/replay.exe 
