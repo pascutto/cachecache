@@ -109,9 +109,9 @@ let () =
   (* exit (Cmd.eval cmd) ; *)
   let t = [| 1000; 10000; 100000 |] in
   for _ = 0 to 1 do
-    for cap = 0 to Array.length t - 2 do
-      Fmt.pr "cap = %d\n" cap;
-      Bench_lru.bench "lru" t.(cap);
-      Bench_lfu.bench "lfu" t.(cap)
+    for i = 0 to Array.length t - 2 do
+      Fmt.pr "cap = %d\n" t.(i);
+      Bench_lru.bench "lru" t.(i);
+      Bench_lfu.bench "lfu" t.(i)
     done
   done
