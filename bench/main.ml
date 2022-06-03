@@ -30,17 +30,16 @@ module Bench (Lru : sig
 end) : BENCH = struct
   let fill n t =
     let rec loop i =
-      if i = 0 then ()
-      else
-        let k = n - i in
-        Lru.replace t k k;
-        loop (i - 1)
+      if i = n then ()
+      else (
+        Lru.replace t i i;
+        loop (i + 1))
     in
-    loop n
+    loop 0
 
-  let v cap = Staged.stage (fun () -> Lru.v cap)
+  let _v cap = Staged.stage (fun () -> Lru.v cap)
 
-  let replace cap =
+  let _replace cap =
     let t = Lru.v cap in
     fill cap t;
     Staged.stage (fun () ->
@@ -54,7 +53,7 @@ end) : BENCH = struct
         let k = Random.int cap in
         assert (Lru.mem t k))
 
-  let find_present cap =
+  let _find_present cap =
     let t = Lru.v cap in
     fill cap t;
     Staged.stage (fun () ->
@@ -64,14 +63,14 @@ end) : BENCH = struct
   let test name =
     Test.make_grouped ~name
       [
-        Test.make_indexed ~name:"v" ~fmt:"%s %d"
-          ~args:[ 100; 10_000; 1_000_000 ] v;
-        Test.make_indexed ~name:"replace" ~fmt:"%s %d"
-          ~args:[ 100; 10_000; 1_000_000 ] replace;
-        Test.make_indexed ~name:"find (present)" ~fmt:"%s %d"
-          ~args:[ 100; 10_000; 1_000_000 ] find_present;
-        Test.make_indexed ~name:"mem (present)" ~fmt:"%s %d"
-          ~args:[ 100; 10_000; 1_000_000 ] mem_present;
+        (* Test.make_indexed ~name:"v" ~fmt:"%s %d" *)
+        (*   ~args:[ 100; 10_000; 1_000_000 ] v; *)
+        (* Test.make_indexed ~name:"replace" ~fmt:"%s %d" *)
+        (*   ~args:[ 100; 10_000; 1_000_000 ] replace; *)
+        (* Test.make_indexed ~name:"find (present)" ~fmt:"%s %d" *)
+        (*   ~args:[ 100; 10_000; 1_000_000 ] find_present; *)
+        Test.make_indexed ~name:"mem (present)" ~fmt:"%s %d" ~args:[ 100 ]
+          mem_present;
       ]
 end
 
