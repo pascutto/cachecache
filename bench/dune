@@ -1,6 +1,6 @@
 (executable
  (name main)
- (libraries bechamel bechamel-notty notty.unix lru cachecache))
+ (libraries bechamel bechamel-notty notty.unix cachecache))
 
 (alias
  (name runtest)

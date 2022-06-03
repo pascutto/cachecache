@@ -13,7 +13,6 @@ depends: [
   "bechamel" {with-test}
   "bechamel-notty" {with-test}
   "notty" {with-test}
-  "lru" {with-test}
 ]
 build: [
   ["dune" "subst"] {pinned}

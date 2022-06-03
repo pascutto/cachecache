@@ -4,26 +4,8 @@ module K = struct
   let hash = Hashtbl.hash
 end
 
-module V = struct
-  type t = int
-
-  let weight _ = 1
-end
-
-module GLru = struct
-  include Cachecache.Lru.Make (K)
-
-  type nonrec t = int t
-end
-
-module OLru = struct
-  include Lru.M.Make (K) (V)
-
-  let v = create ~random:false
-  let find_opt t k = find k t
-  let mem t k = mem k t
-  let replace t k v = add k v t
-end
+module Lru = Cachecache.Lru.Make (K)
+module Lfu = Cachecache.Lfu.Make (K)
 
 let fresh_int =
   let c = ref 0 in
@@ -39,12 +21,12 @@ module type BENCH = sig
 end
 
 module Bench (Lru : sig
-  type t
+  type 'a t
 
-  val v : int -> t
-  val replace : t -> K.t -> V.t -> unit
-  val mem : t -> K.t -> bool
-  val find_opt : t -> K.t -> V.t option
+  val v : int -> 'a t
+  val replace : 'a t -> K.t -> 'a -> unit
+  val mem : 'a t -> K.t -> bool
+  val find_opt : 'a t -> K.t -> 'a option
 end) : BENCH = struct
   let fill n t =
     let rec loop i =
@@ -93,8 +75,8 @@ end) : BENCH = struct
       ]
 end
 
-module GBench = Bench (GLru)
-module OBench = Bench (OLru)
+module LruBench = Bench (Lru)
+module LfuBench = Bench (Lfu)
 
 let benchmark (module B : BENCH) name =
   let ols =
@@ -129,7 +111,7 @@ let report_notty =
   fun res -> img (window, res) |> Notty_unix.eol |> Notty_unix.output_image
 
 let () =
-  let gres = benchmark (module GBench) "CacheCache.Lru" in
-  let ores = benchmark (module OBench) "Lru" in
-  fst gres |> report_notty;
-  fst ores |> report_notty
+  let lru = benchmark (module LruBench) "CacheCache.Lru" in
+  let lfu = benchmark (module LfuBench) "CacheCache.Lfu" in
+  fst lru |> report_notty;
+  fst lfu |> report_notty
