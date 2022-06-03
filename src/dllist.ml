@@ -29,7 +29,7 @@ let create cap witness =
 let create_list t = { first = -1; last = -1; size = 0; t }
 let length l = l.size
 let is_empty l = l.size = 0
-let is_full l = l.t.free == -1
+let is_full l = l.t.free = -1
 let get l i = l.t.contents.(i)
 let ends l = (l.first, l.last)
 

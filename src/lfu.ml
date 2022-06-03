@@ -1,3 +1,5 @@
+module Dllist = Dllist_rac
+
 module Make (K : sig
   type t
 
