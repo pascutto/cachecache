@@ -120,7 +120,9 @@ let clear l =
     else (
       l.t.contents.(i) <- l.t.witness;
       l.t.prev.(i) <- -1;
-      l.t.next.(i) <- -1;
+      l.t.prev.(l.t.free) <- i;
+      l.t.next.(i) <- l.t.free;
+      l.t.free <- i;
       aux l.t.next.(i))
   in
   aux l.first;
