@@ -71,10 +71,11 @@ module Make (Cache : Cachecache.S.Cache with type key = K.t) = struct
               +. mtime stats counter (fun _ -> ignore (Cache.find_opt cache k));
             stats.find <- stats.find + 1
         | Mem k ->
-            let b = Cache.mem cache k in
+            let b = ref false in
             stats.mem_span <-
-              stats.mem_span +. mtime stats counter (fun _ -> ignore b);
-            if b then stats.hit <- stats.hit + 1
+              stats.mem_span
+              +. mtime stats counter (fun _ -> b := Cache.mem cache k);
+            if !b then stats.hit <- stats.hit + 1
             else stats.miss <- stats.miss + 1;
             stats.mem <- stats.mem + 1
         | _ -> assert false)
@@ -89,7 +90,7 @@ module Bench_lru = Make (Lru)
 module Bench_lfu = Make (Lfu)
 
 let () =
-  let t = [| 1000; 10000; 100000 |] in
+  let t = [| 1000; 10000; 100_000 |] in
   for _ = 0 to 2 do
     for i = 0 to Array.length t - 1 do
       Fmt.pr "cap = %d\n" t.(i);
