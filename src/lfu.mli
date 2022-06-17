@@ -8,6 +8,9 @@ end) : sig
   type key = K.t
 
   val v : int -> 'a t
+
+  (*@ t = v c
+      checks c > 0 *)
   val stats : 'a t -> Stats.t
   val is_empty : 'a t -> bool
   val capacity : 'a t -> int
