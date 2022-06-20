@@ -12,8 +12,8 @@ struct
   let dummy : K.t = Obj.magic (ref 0)
 
   type 'a t = {
-    tbl : (int * 'a) H.t;
-    lst : K.t Dllist.t;
+    tbl : (K.t Dllist.c * 'a) H.t;
+    lst : K.t Dllist.l;
     cap : int;
     stats : Stats.t;
   }
@@ -21,7 +21,7 @@ struct
   let unsafe_v c =
     {
       tbl = H.create c;
-      lst = Dllist.create c dummy;
+      lst = Dllist.create c dummy |> Dllist.create_list;
       cap = c;
       stats = Stats.v ();
     }
