@@ -32,7 +32,7 @@ let add new_size t =
   t.add <- t.add + 1;
   if t.max_size < new_size then t.max_size <- new_size
 
-let pp ppf t =
+(* let pp ppf t =
   Fmt.pf ppf
     {|miss             : %d
   hit              : %d
@@ -42,4 +42,4 @@ let pp ppf t =
   remove           : %d
   clear            : %d
   maximal size     : %d|}
-    t.miss t.hit t.add t.replace t.discard t.remove t.clear t.max_size
+    t.miss t.hit t.add t.replace t.discard t.remove t.clear t.max_size *)

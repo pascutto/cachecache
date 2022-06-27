@@ -6,15 +6,16 @@ module Make (K : sig
 
   val hash : t -> int
 end) : sig
-  type 'a t
   type key = K.t
 
+  type 'a t
+  
   (*@ ephemeral
       model cap : int
       mutable model assoc : key -> 'a option
       mutable model frequency : key -> int
       invariant cap > 0
-      invariant forall k. assoc k <> None -> frequency > 0 *)
+      invariant forall k. assoc k <> None <-> frequency k > 0 *)
 
   val v : int -> 'a t
   (* t = v c
@@ -35,36 +36,37 @@ end) : sig
 
   val size : 'a t -> int
   (*@ s = size t
-      pure *)
+      pure 
+      ensures s <= t.cap *)
 
   val clear : 'a t -> unit
   (*@ clear t
-      modifies t *)
+      modifies t 
+      ensures forall k. t.assoc k = None *)
 
   val find : 'a t -> key -> 'a
   (*@ v = find t k
-      ensures t.assoc k = Some v
-      raises Not_found -> t.assoc k = None
-      ensures if t.assoc k = Some v then t.frequency k = t.frequency old k + 1 *)
+      ensures t.assoc k = Some v -> t.frequency k = t.frequency (old k) + 1
+      raises Not_found -> t.assoc k = None *)
 
   val find_opt : 'a t -> key -> 'a option
   (*@ o = find_opt t k
       pure
       ensures o = t.assoc k
-      ensures if t.assoc k = Some v then t.frequency k = t.frequency old k + 1 *)
+      ensures t.assoc k <> None -> t.frequency k = t.frequency (old k) + 1 *)
 
   val mem : 'a t -> key -> bool
   (*@ b = mem t k
       pure
-      ensures b <-> t.assoc k <> None && t.frequency k = t.frequency old k + 1 *)
+      ensures b <-> t.assoc k <> None && t.frequency k = t.frequency (old k) + 1 *)
 
   val replace : 'a t -> key -> 'a -> unit
   (*@ replace t k v
       modifies t
       ensures t.assoc k = Some v
-      t.assoc old k <> None -> t.frequency k = t.frequency old k + 1
-      t.size < t.cap -> t.assoc old k = None ->
-        forall k'. t.assoc old k' <> None -> t.assoc k' <> None *)
+      ensures t.assoc (old k) <> None -> t.frequency k = t.frequency (old k) + 1
+      ensures t.assoc (old k) = None ->
+        forall k', v'. t.assoc (old k') = Some v' -> t.assoc k' = Some v' && t.frequency k = 1 *)
 
   val remove : 'a t -> key -> unit
   (*@ remove t k

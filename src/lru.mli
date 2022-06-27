@@ -47,10 +47,10 @@ end) : sig
       raises Not_found -> t.assoc k = None *)
 
   val find_opt : 'a t -> key -> 'a option
-
   (*@ o = find_opt t k
       ensures o = t.assoc k *)
-  val mem : 'a t -> key -> bool
+ 
+      val mem : 'a t -> key -> bool
   (*@ b = mem t k
       ensures b = true <-> t.assoc k <> None *)
 
